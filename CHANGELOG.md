@@ -7,6 +7,21 @@ and the format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Documentation
+
+- New "Status element styling" section in README documenting the three
+  customization paths for the widget's visual status feedback:
+  default colors out-of-the-box, per-state CSS override, or wholesale
+  opt-out via `data-captcha-no-color` attribute. Reflects the
+  underlying captcha.js change (now served from captchaapi.eu) which
+  removed status element auto-injection in favour of strict opt-in,
+  and switched default colors from inline `style.color` to a low-
+  specificity injected stylesheet so customer CSS overrides cleanly
+  without `!important`.
+
+  Package code is unchanged — this is documentation catching up to
+  upstream behaviour customers see when they install today.
+
 ## [1.0.0] - 2026-05-03
 
 Initial release.

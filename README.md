@@ -138,6 +138,63 @@ The wrapper sets `data-captcha-mode="event"`, includes the hidden
 attestation input, and dispatches to your Livewire `register` method
 once the attestation arrives.
 
+## Status element styling
+
+Place a `<div data-captcha-status></div>` anywhere inside (or near)
+your form to show the widget's current state to your users. Six
+states exist (`waiting`, `idle`, `solving`, `ready`, `error`,
+`rate_limited`), each rendered as an icon + a localised message. The
+widget sets `data-captcha-state="…"` on the element so you can target
+each state with CSS.
+
+The status element is **opt-in**. A form without a
+`[data-captcha-status]` child runs silently — submission still works,
+only the visible signal is absent. There is no auto-injection.
+
+### Default colors
+
+The widget injects a low-specificity stylesheet on first use that
+applies sensible default colors per state:
+
+| State          | Default color            |
+| -------------- | ------------------------ |
+| `waiting`      | `#6b7280` grey           |
+| `idle`         | `#6b7280` grey           |
+| `solving`      | `#6b7280` grey           |
+| `ready`        | `#059669` emerald        |
+| `error`        | `#dc2626` red            |
+| `rate_limited` | `#d97706` amber          |
+
+You don't have to write any CSS to get those colors. They appear
+automatically on every `[data-captcha-status]` element the widget
+finds.
+
+### Override one state
+
+Write a higher-specificity rule (two attribute selectors instead of
+one). The customer rule wins regardless of cascade order — no
+`!important` needed:
+
+```css
+[data-captcha-status][data-captcha-state="ready"] { color: #047857; }
+[data-captcha-status][data-captcha-state="error"] { color: #b91c1c; }
+```
+
+### Take over completely (Tailwind / design system)
+
+Add `data-captcha-no-color` to suppress the widget's default
+stylesheet entirely. Your own classes / CSS apply cleanly:
+
+```html
+<div data-captcha-status data-captcha-no-color
+     class="text-cyan-700 dark:text-cyan-300"></div>
+```
+
+Note that `waiting` and `ready` share the shield icon and would be
+visually identical without color. If you opt out of the widget
+defaults, supply per-state colors in your own CSS so the two stay
+distinguishable.
+
 ## Configuration reference
 
 | Config key                  | ENV variable                    | Default | Purpose                                                                                  |
