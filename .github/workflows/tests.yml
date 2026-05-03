@@ -14,7 +14,6 @@ jobs:
       matrix:
         php: ['8.2', '8.3', '8.4']
         laravel: ['11.*', '12.*', '13.*']
-        livewire: ['3.*', '4.*']
         include:
           - laravel: '11.*'
             testbench: '9.*'
@@ -27,7 +26,7 @@ jobs:
           - php: '8.2'
             laravel: '13.*'
 
-    name: PHP ${{ matrix.php }} / Laravel ${{ matrix.laravel }} / Livewire ${{ matrix.livewire }}
+    name: PHP ${{ matrix.php }} / Laravel ${{ matrix.laravel }}
 
     steps:
       - uses: actions/checkout@v4
@@ -49,7 +48,6 @@ jobs:
         run: |
           composer require --dev \
             "orchestra/testbench:${{ matrix.testbench }}" \
-            "livewire/livewire:${{ matrix.livewire }}" \
             --no-interaction --no-update
           composer update --prefer-dist --no-interaction
 

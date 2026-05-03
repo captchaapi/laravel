@@ -7,6 +7,20 @@ and the format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- **Dropped Livewire 3 from supported matrix.** Package code is unchanged
+  — the `WithCaptcha` trait and `<x-captchaapi::livewire-form>` Blade
+  component use surface (`#[Validate]` attribute, `wire:model`,
+  `$wire.set` / `$wire.{method}`) that is identical between Livewire 3
+  and 4, so production users on Livewire 3 will likely still work.
+  However, the test infrastructure (Testbench × Livewire 3 ×
+  Laravel 11) trips on a realtime-facade autoloading timing issue
+  inside Livewire 3's `SupportFileUploads::provide()` boot path, which
+  cannot be reasonably worked around at the package level. CI now
+  tests Livewire 4 only; `composer.json` `require-dev` and `suggest`
+  drop the `^3.0` constraint.
+
 ### Documentation
 
 - New "Status element styling" section in README documenting the three

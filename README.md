@@ -25,7 +25,7 @@ rule, and Livewire trait. No cookies, no tracking, no Google.
 
 - PHP 8.2+
 - Laravel 11, 12, or 13
-- (Optional) Livewire 3 or 4 for the trait + livewire-form component
+- (Optional) Livewire 4 for the trait + livewire-form component
 
 ## Installation
 
