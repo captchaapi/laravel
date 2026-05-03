@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Captchaapi\Laravel\Concerns\WithCaptcha;
 use Illuminate\Contracts\Validation\ValidationRule;
 
 arch('strict types are declared in every src file')
@@ -13,7 +14,7 @@ arch('classes in src are final unless explicitly extensible')
     ->classes()
     ->toBeFinal()
     ->ignoring([
-        'Captchaapi\Laravel\Concerns\WithCaptcha',  // trait, not a class
+        WithCaptcha::class,  // trait, not a class
     ]);
 
 arch('no debug helpers leak into shipped code')

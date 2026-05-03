@@ -168,7 +168,7 @@ function runRule(mixed $value): ?string
     $error = null;
     $rule = new ValidCaptcha;
     $rule->validate('captcha_attestation', $value, function ($message) use (&$error): void {
-        $error = (string) $message;
+        $error = $message;
     });
 
     return $error;

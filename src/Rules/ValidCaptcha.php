@@ -144,7 +144,7 @@ final class ValidCaptcha implements ValidationRule
             return true;
         }
 
-        $key = ((string) config('captchaapi.cache_prefix', 'captchaapi:jti:')).$jti;
+        $key = (config('captchaapi.cache_prefix', 'captchaapi:jti:')).$jti;
         $ttl = max(1, (int) $payload['exp'] - time());
 
         // Cache::add returns false if the key already existed → replay attempt.

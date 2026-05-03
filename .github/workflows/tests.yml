@@ -22,6 +22,10 @@ jobs:
             testbench: '10.*'
           - laravel: '13.*'
             testbench: '11.*'
+        exclude:
+          # Laravel 13 requires PHP 8.3+
+          - php: '8.2'
+            laravel: '13.*'
 
     name: PHP ${{ matrix.php }} / Laravel ${{ matrix.laravel }} / Livewire ${{ matrix.livewire }}
 
@@ -43,8 +47,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          composer require \
-            "laravel/framework:${{ matrix.laravel }}" \
+          composer require --dev \
             "orchestra/testbench:${{ matrix.testbench }}" \
             "livewire/livewire:${{ matrix.livewire }}" \
             --no-interaction --no-update

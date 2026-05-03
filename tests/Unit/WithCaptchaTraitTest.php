@@ -35,7 +35,7 @@ it('the trait declares the rule via a protected method that returns ValidCaptcha
     expect($rules)->toHaveKey('captcha_attestation');
     expect($rules['captcha_attestation'])->toContain('required', 'string');
 
-    $captchaRule = collect($rules['captcha_attestation'])->first(fn ($r) => $r instanceof ValidCaptcha);
+    $captchaRule = collect($rules['captcha_attestation'])->first(fn ($r): bool => $r instanceof ValidCaptcha);
     expect($captchaRule)->toBeInstanceOf(ValidCaptcha::class);
 });
 
