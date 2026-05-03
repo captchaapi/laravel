@@ -3,7 +3,7 @@
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/captchaapi/laravel.svg?style=flat-square)](https://packagist.org/packages/captchaapi/laravel)
 [![Total Downloads](https://img.shields.io/packagist/dt/captchaapi/laravel.svg?style=flat-square)](https://packagist.org/packages/captchaapi/laravel)
 [![Tests](https://img.shields.io/github/actions/workflow/status/captchaapi/laravel/tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/captchaapi/laravel/actions/workflows/tests.yml)
-[![License](https://img.shields.io/packagist/l/captchaapi/laravel.svg?style=flat-square)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](LICENSE)
 
 Official Laravel SDK for [captchaapi.eu](https://captchaapi.eu) — EU-hosted,
 GDPR-compliant proof-of-work CAPTCHA. Drop-in Blade component, validation

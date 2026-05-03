@@ -7,6 +7,16 @@ and the format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Documentation
+
+- README license badge switched from
+  `img.shields.io/packagist/l/...` (depends on Packagist API + shields.io
+  cache, returned "not found" until both refreshed after registration)
+  to a static MIT badge. License is constant; no reason to fetch it
+  dynamically.
+
+## [1.0.1] - 2026-05-04
+
 ### Changed
 
 - **Dropped Livewire 3 from supported matrix.** Package code is unchanged
