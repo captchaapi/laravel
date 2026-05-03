@@ -1,0 +1,17 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    level: 8
+    paths:
+        - src
+    excludePaths:
+        - vendor
+    treatPhpDocTypesAsCertain: false
+    ignoreErrors:
+        # WithCaptcha is consumer-facing API — concrete usage lives in
+        # consumers' Livewire components, not src/. Trait body is exercised
+        # by tests/Unit/WithCaptchaTraitTest.php (anonymous class).
+        -
+            identifier: trait.unused
+            path: src/Concerns/WithCaptcha.php

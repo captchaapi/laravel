@@ -1,0 +1,85 @@
+{
+    "name": "captchaapi/laravel",
+    "description": "Official Laravel SDK for captchaapi.eu — EU-hosted, GDPR-compliant proof-of-work CAPTCHA with native Livewire support.",
+    "type": "library",
+    "license": "MIT",
+    "homepage": "https://captchaapi.eu",
+    "keywords": [
+        "laravel",
+        "livewire",
+        "captcha",
+        "captchaapi",
+        "proof-of-work",
+        "pow",
+        "spam-protection",
+        "gdpr",
+        "eu"
+    ],
+    "authors": [
+        {
+            "name": "Vladislav Rajtmajer",
+            "email": "rajtik@gmail.com",
+            "homepage": "https://captchaapi.eu"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/captchaapi/laravel/issues",
+        "source": "https://github.com/captchaapi/laravel",
+        "docs": "https://captchaapi.eu/docs"
+    },
+    "require": {
+        "php": "^8.2",
+        "illuminate/cache": "^11.0|^12.0|^13.0",
+        "illuminate/contracts": "^11.0|^12.0|^13.0",
+        "illuminate/support": "^11.0|^12.0|^13.0",
+        "illuminate/validation": "^11.0|^12.0|^13.0"
+    },
+    "require-dev": {
+        "larastan/larastan": "^3.0",
+        "laravel/pint": "^1.0",
+        "livewire/livewire": "^3.0|^4.0",
+        "orchestra/testbench": "^9.0|^10.0|^11.0",
+        "pestphp/pest": "^3.0|^4.0",
+        "pestphp/pest-plugin-laravel": "^3.0|^4.0",
+        "rector/rector": "^2.0"
+    },
+    "suggest": {
+        "livewire/livewire": "Required only if you use the WithCaptcha trait or <x-captchaapi::livewire-form> Blade component (^3.0|^4.0)"
+    },
+    "autoload": {
+        "psr-4": {
+            "Captchaapi\\Laravel\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Captchaapi\\Laravel\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Captchaapi\\Laravel\\CaptchaapiServiceProvider"
+            ],
+            "aliases": {
+                "Captchaapi": "Captchaapi\\Laravel\\Facades\\Captchaapi"
+            }
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/pest --parallel",
+        "test:coverage": "vendor/bin/pest --coverage --min=95",
+        "lint": "vendor/bin/pint --test",
+        "format": "vendor/bin/pint",
+        "stan": "vendor/bin/phpstan analyse",
+        "rector": "vendor/bin/rector process --dry-run"
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

@@ -1,0 +1,1 @@
+<x-captchaapi::widget />
