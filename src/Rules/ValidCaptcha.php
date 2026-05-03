@@ -43,6 +43,19 @@ final class ValidCaptcha implements ValidationRule
             return;
         }
 
+        // Per-request memoization. If we've already validated this exact attestation
+        // earlier in the current HTTP request, treat it as still valid and skip every
+        // check (including the jti cache claim). Some frameworks invoke the validator
+        // more than once per request — Laravel Fortify is the canonical example: its
+        // `authenticateUsing` callback fires twice (once via
+        // `RedirectIfTwoFactorAuthenticatable::validateCredentials`, once via
+        // `AttemptToAuthenticate::handle`) so a captcha rule wired into that callback
+        // would otherwise be rejected as a replay on the second call.
+        $memoKey = $this->memoKey($value);
+        if ($this->isMemoized($memoKey)) {
+            return;
+        }
+
         [$payloadB64, $sigB64] = explode('.', $value, 2);
 
         $signature = self::base64UrlDecode($sigB64);
@@ -84,6 +97,10 @@ final class ValidCaptcha implements ValidationRule
 
             return;
         }
+
+        // Validation succeeded — record this attestation as already-validated for the
+        // remainder of the current request so subsequent re-invocations short-circuit.
+        $this->memoize($memoKey);
     }
 
     /**
@@ -161,5 +178,34 @@ final class ValidCaptcha implements ValidationRule
     private function failureMessage(): string
     {
         return (string) trans('captchaapi::validation.failed');
+    }
+
+    /**
+     * Memoization key derived from the attestation string. xxh64 keeps the key short
+     * regardless of attestation length and is collision-resistant enough for a
+     * per-request namespace; cryptographic strength is not a requirement here because
+     * the attestation itself was already authenticated upstream.
+     */
+    private function memoKey(string $attestation): string
+    {
+        return '_captchaapi_validated_'.hash('xxh64', $attestation);
+    }
+
+    private function isMemoized(string $memoKey): bool
+    {
+        if (! app()->bound('request')) {
+            return false;
+        }
+
+        return (bool) request()->attributes->get($memoKey, false);
+    }
+
+    private function memoize(string $memoKey): void
+    {
+        if (! app()->bound('request')) {
+            return;
+        }
+
+        request()->attributes->set($memoKey, true);
     }
 }

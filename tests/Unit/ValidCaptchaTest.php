@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Captchaapi\Laravel\Facades\Captchaapi;
 use Captchaapi\Laravel\Rules\ValidCaptcha;
 use Illuminate\Support\Facades\Cache;
+use Symfony\Component\HttpFoundation\ParameterBag;
 
 beforeEach(function (): void {
     Captchaapi::unfake();
@@ -118,11 +119,47 @@ it('rejects an attestation whose sk is missing', function (): void {
 
 // ─── Replay protection ────────────────────────────────────────────────────────
 
-it('rejects a second submission of the same attestation when replay protection is on', function (): void {
+it('rejects a second submission of the same attestation across requests when replay protection is on', function (): void {
     $attestation = mintAttestation();
 
     expect(runRule($attestation))->toBeNull();
+
+    // Simulate a fresh HTTP request — clear per-request memoization so the
+    // jti cache claim is the only thing standing between this attestation
+    // and acceptance. Without the reset, the rule would short-circuit via
+    // memoization (which is correct within the same request, see the
+    // dedicated memoization test below).
+    resetRequest();
+
     expect(runRule($attestation))->not->toBeNull();
+});
+
+it('memoizes successful validation per request — same attestation passes twice within a request', function (): void {
+    // Frameworks like Laravel Fortify call the validator multiple times per
+    // request (RedirectIfTwoFactorAuthenticatable + AttemptToAuthenticate).
+    // Per-request memoization makes those repeated calls succeed instead of
+    // tripping replay protection.
+    $attestation = mintAttestation();
+
+    expect(runRule($attestation))->toBeNull();
+    expect(runRule($attestation))->toBeNull();   // same request → memoized → passes
+    expect(runRule($attestation))->toBeNull();   // still same request
+});
+
+it('memoization is per-attestation — different attestations validate independently within one request', function (): void {
+    $a = mintAttestation();
+    $b = mintAttestation();
+
+    expect(runRule($a))->toBeNull();
+    expect(runRule($b))->toBeNull();   // different jti → different memo key → both pass
+});
+
+it('failed validation does not memoize — a subsequent call gets fully checked again', function (): void {
+    $bad = mintAttestation(secret: 'wrong_secret');
+
+    expect(runRule($bad))->not->toBeNull();
+    // Second call still fails (signature still wrong, no memo to short-circuit).
+    expect(runRule($bad))->not->toBeNull();
 });
 
 it('accepts a second submission of the same attestation when replay protection is off', function (): void {
@@ -172,4 +209,15 @@ function runRule(mixed $value): ?string
     });
 
     return $error;
+}
+
+/**
+ * Simulate a fresh HTTP request boundary. Drops the attributes bag where
+ * ValidCaptcha stores its per-request memoization, but leaves the rest of
+ * the request (input, headers, etc.) untouched so the rest of the test
+ * setup stays valid.
+ */
+function resetRequest(): void
+{
+    request()->attributes = new ParameterBag;
 }

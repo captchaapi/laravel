@@ -7,6 +7,26 @@ and the format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.0.2] - 2026-05-04
+
+### Fixed
+
+- **Per-request memoization in `ValidCaptcha`** so the rule is safe to
+  call multiple times with the same attestation within a single HTTP
+  request. The canonical case is Laravel Fortify: its
+  `Fortify::authenticateUsing` callback fires twice per login attempt
+  (once via `RedirectIfTwoFactorAuthenticatable::validateCredentials`,
+  once via `AttemptToAuthenticate::handle`), so a captcha rule wired
+  into that callback would on its second invocation hit the jti cache
+  set by its first invocation and reject as a replay. After this fix,
+  the second within-request call short-circuits via the memoization
+  flag and returns success without re-claiming the cache key. Replay
+  protection across requests still works exactly as before.
+
+  Recommended deployment: bump to 1.0.2, then re-enable
+  `CAPTCHAAPI_REPLAY_PROTECTION=true` in any project that had to
+  disable it as a workaround.
+
 ### Documentation
 
 - README license badge switched from
