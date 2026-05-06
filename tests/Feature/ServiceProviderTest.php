@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Captchaapi\Laravel\Captchaapi;
 use Captchaapi\Laravel\CaptchaapiServiceProvider;
+use Captchaapi\Laravel\Tests\Helpers\Attestation;
 use Illuminate\Support\Facades\Validator;
 
 it('registers the Captchaapi singleton', function (): void {
@@ -33,7 +34,7 @@ it('registers the captcha string validation alias and fails invalid input', func
 
 it('registers the captcha string validation alias and passes a real attestation', function (): void {
     $validator = Validator::make(
-        ['captcha_attestation' => mintAttestation()],
+        ['captcha_attestation' => Attestation::mint()],
         ['captcha_attestation' => 'required|captcha'],
     );
 

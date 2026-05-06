@@ -208,6 +208,7 @@ distinguishable.
 | `mode`                      | `CAPTCHAAPI_MODE`               | `null`  | `submit` (native form POST) or `event` (CustomEvent for Livewire/SPA).                   |
 | `replay_protection`         | `CAPTCHAAPI_REPLAY_PROTECTION`  | `true`  | Cache each attestation `jti` and reject duplicates within its TTL window.                |
 | `cache_prefix`              | —                               | `captchaapi:jti:` | Prefix for cached jtis. Change only on collision with another package.         |
+| `clock_skew_leeway`         | `CAPTCHAAPI_CLOCK_SKEW_LEEWAY`  | `60`    | Seconds an attestation's `iat` may sit in the future before it is rejected.              |
 
 ## Secret key rotation
 
@@ -243,6 +244,11 @@ is unreliable or unavailable:
 ```php
 'replay_protection' => false,
 ```
+
+Use **Redis**, **Memcached**, or the **database** cache driver in
+production. The `file` and `array` drivers don't have an atomic
+`Cache::add()`, so concurrent submissions can race past the replay
+check.
 
 ## Testing
 

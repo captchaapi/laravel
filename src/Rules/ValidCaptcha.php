@@ -13,26 +13,18 @@ use Illuminate\Support\Facades\Cache;
  * Validates a captchaapi.eu attestation produced by the browser widget.
  *
  * Attestation format: "{base64url(payload_json)}.{base64url(hmac_sha256(payload_b64, secret_key))}"
- * Payload fields:
- *   sk  — site_key (must match the configured site key)
- *   iat — issued at (unix seconds)
- *   exp — expires at (unix seconds, must be in the future)
- *   jti — UUID for optional single-use replay protection
- *   ol  — over_limit flag (informational; does not affect validity)
+ * Payload fields: sk (site_key), iat, exp, jti (replay), ol (over_limit, informational).
  *
- * The check is purely local — no HTTP round-trip to captchaapi.eu. Multi-secret
- * support enables zero-downtime key rotation: any matching key in
- * config('captchaapi.secret_keys') accepts the attestation.
- *
- * Replay protection is opt-out via config('captchaapi.replay_protection'). When
- * enabled, each accepted jti is cached for the remainder of its lifetime and
- * subsequent submissions of the same attestation are rejected.
+ * Verification is local — no HTTP round-trip. Any key in
+ * config('captchaapi.secret_keys') accepts the attestation, enabling
+ * zero-downtime key rotation.
  */
 final class ValidCaptcha implements ValidationRule
 {
+    private const MAX_JTI_LENGTH = 128;
+
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        // Fake mode (test helper) bypasses every check — see Captchaapi::fake().
         if (Captchaapi::isFake()) {
             return;
         }
@@ -43,14 +35,8 @@ final class ValidCaptcha implements ValidationRule
             return;
         }
 
-        // Per-request memoization. If we've already validated this exact attestation
-        // earlier in the current HTTP request, treat it as still valid and skip every
-        // check (including the jti cache claim). Some frameworks invoke the validator
-        // more than once per request — Laravel Fortify is the canonical example: its
-        // `authenticateUsing` callback fires twice (once via
-        // `RedirectIfTwoFactorAuthenticatable::validateCredentials`, once via
-        // `AttemptToAuthenticate::handle`) so a captcha rule wired into that callback
-        // would otherwise be rejected as a replay on the second call.
+        // Frameworks like Fortify invoke the validator twice per request; memoize
+        // successful results so the jti claim doesn't reject the second call.
         $memoKey = $this->memoKey($value);
         if ($this->isMemoized($memoKey)) {
             return;
@@ -98,30 +84,23 @@ final class ValidCaptcha implements ValidationRule
             return;
         }
 
-        // Validation succeeded — record this attestation as already-validated for the
-        // remainder of the current request so subsequent re-invocations short-circuit.
         $this->memoize($memoKey);
     }
 
-    /**
-     * Constant-time scan of every configured secret key. Returns true on the
-     * first match. The loop runs to completion in the worst case — list of
-     * keys is small (1–2 during a rotation window) so the timing leakage of
-     * loop length is negligible compared to the per-key hash_equals.
-     */
+    /** Constant-time scan: always runs to completion so timing doesn't leak which key matched. */
     private function signatureMatchesAnySecret(string $payloadB64, string $signature): bool
     {
         /** @var list<string> $secrets */
         $secrets = (array) config('captchaapi.secret_keys', []);
 
+        $matched = false;
         foreach ($secrets as $secret) {
             $expected = hash_hmac('sha256', $payloadB64, (string) $secret, binary: true);
-            if (hash_equals($expected, $signature)) {
-                return true;
-            }
+            // OR after the call so hash_equals always executes.
+            $matched = hash_equals($expected, $signature) || $matched;
         }
 
-        return false;
+        return $matched;
     }
 
     /**
@@ -129,9 +108,21 @@ final class ValidCaptcha implements ValidationRule
      */
     private function payloadIsFresh(array $payload): bool
     {
+        $now = time();
         $exp = $payload['exp'] ?? null;
+        $iat = $payload['iat'] ?? null;
 
-        return is_int($exp) && $exp >= time();
+        if (! is_int($exp) || $exp < $now) {
+            return false;
+        }
+
+        if (! is_int($iat)) {
+            return false;
+        }
+
+        $leeway = max(0, (int) config('captchaapi.clock_skew_leeway', 60));
+
+        return $iat <= $now + $leeway;
     }
 
     /**
@@ -142,26 +133,25 @@ final class ValidCaptcha implements ValidationRule
         $siteKey = (string) ($payload['sk'] ?? '');
         $configured = (string) config('captchaapi.site_key', '');
 
-        return $siteKey !== '' && $configured !== '' && hash_equals($configured, $siteKey);
+        return $siteKey !== '' && $configured !== '' && $siteKey === $configured;
     }
 
     /**
-     * Atomically reserve the jti so a second submission of the same attestation
-     * is rejected. Cache TTL matches the attestation's remaining lifetime so we
-     * never hold entries longer than they're useful.
-     *
      * @param  array<string, mixed>  $payload
      */
     private function claimAndCacheJti(array $payload): bool
     {
         $jti = $payload['jti'] ?? null;
         if (! is_string($jti) || $jti === '') {
-            // No jti = legacy attestation. Treat as accepted (signature + exp + sk
-            // already passed); replay protection silently doesn't apply.
+            // Legacy attestation without jti — replay protection doesn't apply.
             return true;
         }
 
-        $key = (config('captchaapi.cache_prefix', 'captchaapi:jti:')).$jti;
+        if (strlen($jti) > self::MAX_JTI_LENGTH) {
+            return false;
+        }
+
+        $key = ((string) config('captchaapi.cache_prefix', 'captchaapi:jti:')).$jti;
         $ttl = max(1, (int) $payload['exp'] - time());
 
         // Cache::add returns false if the key already existed → replay attempt.
@@ -180,14 +170,9 @@ final class ValidCaptcha implements ValidationRule
         return (string) trans('captchaapi::validation.failed');
     }
 
-    /**
-     * Memoization key derived from the attestation string. xxh64 keeps the key short
-     * regardless of attestation length and is collision-resistant enough for a
-     * per-request namespace; cryptographic strength is not a requirement here because
-     * the attestation itself was already authenticated upstream.
-     */
     private function memoKey(string $attestation): string
     {
+        // xxh64 — fast, short, non-cryptographic; the attestation is already authenticated.
         return '_captchaapi_validated_'.hash('xxh64', $attestation);
     }
 
