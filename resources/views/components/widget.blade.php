@@ -1,20 +1,7 @@
 {{--
-    <x-captchaapi::widget />
-
-    Loads the captchaapi.eu client-side widget on the current page. Place once
-    in your layout (typically in <head> or before </body>). Reads every config
-    knob from config/captchaapi.php so consumers don't repeat themselves.
-
-    Optional props let you override per-page:
-      :site-key   force a different site key (e.g. multi-tenant apps)
-      :base-url   override the API origin (self-hosted / proxied)
-      :locale     override the widget UI language
-      :preload    'lazy' (default) | 'eager'
-      :debug      true | false
-      :mode       'submit' (default) | 'event' — global default for every form
-
-    The data-captcha-mode attribute on individual <form> tags still takes
-    precedence over the global :mode setting here.
+    Loads the captchaapi.eu widget on the current page. Place once per layout.
+    All props default to config/captchaapi.php values; per-form data-captcha-mode
+    still overrides the global :mode set here.
 --}}
 @props([
     'siteKey' => null,

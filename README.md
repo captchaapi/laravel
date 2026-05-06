@@ -272,9 +272,15 @@ afterEach(function () {
 The fake state is stored on the `Captchaapi` singleton — it does not
 persist across requests in production code.
 
+## Security
+
+If you discover a security vulnerability, please **do not** open a
+public GitHub issue. Use GitHub's [private vulnerability reporting](https://github.com/captchaapi/laravel/security/advisories/new)
+so we can coordinate a fix before details become public.
+
 ## Contributing
 
-Bug reports, security disclosures, and feature requests welcome at
+Bug reports and feature requests welcome at
 [github.com/captchaapi/laravel/issues](https://github.com/captchaapi/laravel/issues).
 
 For development:

@@ -53,3 +53,27 @@ jobs:
 
       - name: Run Pest
         run: vendor/bin/pest --parallel
+
+  coverage:
+    runs-on: ubuntu-latest
+    name: Coverage (PHP 8.4 / Laravel 12)
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, intl, json
+          coverage: pcov
+
+      - name: Install dependencies
+        run: |
+          composer require --dev \
+            "orchestra/testbench:10.*" \
+            --no-interaction --no-update
+          composer update --prefer-dist --no-interaction
+
+      - name: Run Pest with coverage gate
+        run: composer test:coverage

@@ -29,20 +29,16 @@ final class CaptchaapiServiceProvider extends ServiceProvider
         $this->registerPublishing();
     }
 
-    /**
-     * Anonymous Blade components live in resources/views/components/ and are
-     * exposed under the `captchaapi` prefix so consumers can write
-     * <x-captchaapi::widget /> and <x-captchaapi::livewire-form>.
-     */
     private function registerBladeComponents(): void
     {
         Blade::anonymousComponentPath(__DIR__.'/../resources/views/components', 'captchaapi');
     }
 
     /**
-     * Register the string alias `captcha` so callers can write
-     * 'captcha_attestation' => 'required|captcha' instead of always
-     * instantiating the rule object. Both forms remain supported.
+     * Registers the `captcha` string alias for `'rules' => 'required|captcha'`.
+     *
+     * extend()'s 4th argument overrides any per-failure $fail($message); replace
+     * with custom validator hooks if differentiated messages are added.
      */
     private function registerValidationAlias(): void
     {
@@ -51,9 +47,6 @@ final class CaptchaapiServiceProvider extends ServiceProvider
 
         $factory->extend('captcha', function (string $attribute, mixed $value): bool {
             $passed = true;
-            // Closure signature matches the ValidationRule contract's $fail callable so
-            // phpstan stays happy. Return value is irrelevant to extend()'s bool result;
-            // we capture failure via the captured $passed flag.
             (new ValidCaptcha)->validate(
                 $attribute,
                 $value,
