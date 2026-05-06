@@ -74,9 +74,35 @@ it('<x-captchaapi::livewire-form> wraps content with data-captcha + event mode',
     expect($rendered)->toContain('data-captcha');
     expect($rendered)->toContain('data-captcha-mode="event"');
     expect($rendered)->toContain('<input type="hidden" name="captcha_attestation"');
-    expect($rendered)->toContain('wire:model="captcha_attestation"');
+    expect($rendered)->not->toContain('wire:model');
+    expect($rendered)->toContain('$wire.captcha_attestation = $event.detail.attestation');
     expect($rendered)->toContain('$wire.register()');
     expect($rendered)->toContain('SLOT_CONTENT_MARKER');
+});
+
+it('<x-captchaapi::livewire-form> rejects invalid action names', function (): void {
+    $tmp = tempnam(sys_get_temp_dir(), 'captchaapi-form-').'.blade.php';
+    file_put_contents($tmp, '<x-captchaapi::livewire-form action="not a valid identifier"></x-captchaapi::livewire-form>');
+
+    try {
+        $rendered = false;
+        try {
+            (string) view()->file($tmp)->render();
+            $rendered = true;
+        } catch (Throwable $e) {
+            // Blade wraps render-time exceptions in ViewException; walk the chain.
+            $cause = $e;
+            while ($cause !== null && ! $cause instanceof InvalidArgumentException) {
+                $cause = $cause->getPrevious();
+            }
+
+            expect($cause)->toBeInstanceOf(InvalidArgumentException::class);
+            expect($cause->getMessage())->toContain('must be a valid PHP identifier');
+        }
+        expect($rendered)->toBeFalse();
+    } finally {
+        @unlink($tmp);
+    }
 });
 
 it('<x-captchaapi::livewire-form> forwards extra HTML attributes to the form', function (): void {

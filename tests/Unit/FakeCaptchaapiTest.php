@@ -10,6 +10,10 @@ beforeEach(function (): void {
     Captchaapi::unfake();
 });
 
+afterEach(function (): void {
+    app()['env'] = 'testing';
+});
+
 it('starts unfaked', function (): void {
     expect(Captchaapi::isFake())->toBeFalse();
 });
@@ -36,4 +40,11 @@ it('a faked rule accepts any value', function (): void {
     });
 
     expect($errors)->toBeEmpty();
+});
+
+it('Captchaapi::fake() throws outside the testing environment', function (): void {
+    app()['env'] = 'production';
+
+    expect(fn () => Captchaapi::fake())
+        ->toThrow(RuntimeException::class, 'testing environment');
 });

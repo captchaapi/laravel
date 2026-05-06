@@ -1,35 +1,18 @@
 {{--
-    <x-captchaapi::livewire-form action="register">
-        ...form fields...
-    </x-captchaapi::livewire-form>
-
-    Drop-in <form> wrapper for Livewire components using the WithCaptcha trait.
-
-    What it does:
-      - Sets data-captcha + data-captcha-mode="event" so the widget dispatches
-        a captchaapi:attested CustomEvent instead of calling form.submit()
-        (which would bypass Livewire's AJAX submit pipeline).
-      - Includes a hidden <input type="hidden" name="captcha_attestation"> that
-        the widget writes to (defence-in-depth — the Livewire property is the
-        primary transport).
-      - Alpine listener catches captchaapi:attested, syncs the attestation into
-        the Livewire component's $captcha_attestation property, then invokes
-        the action method named in :action.
-
-    The :action prop is REQUIRED. It is the Livewire method that will be called
-    after the attestation is in place — equivalent to wire:submit on a normal
-    Livewire form.
-
-    Any extra HTML attributes (class, id, etc.) are forwarded to the <form>.
+    <form> wrapper for Livewire components using the WithCaptcha trait.
+    :action is required and must be a valid PHP identifier — it's interpolated
+    into the inline x-on handler.
 --}}
 @props([
     'action',
 ])
 @php
-    $listener = sprintf(
-        '$wire.captcha_attestation = $event.detail.attestation; $wire.%s()',
-        addslashes($action),
-    );
+    if (! is_string($action) || preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $action) !== 1) {
+        throw new \InvalidArgumentException(
+            'x-captchaapi::livewire-form :action must be a valid PHP identifier (Livewire method name); got '.var_export($action, true)
+        );
+    }
+    $listener = '$wire.captcha_attestation = $event.detail.attestation; $wire.'.$action.'()';
 @endphp
 <form
     {{ $attributes->merge([
@@ -39,6 +22,6 @@
     x-data
     x-on:captchaapi:attested="{{ $listener }}"
 >
-    <input type="hidden" name="captcha_attestation" wire:model="captcha_attestation">
+    <input type="hidden" name="captcha_attestation">
     {{ $slot }}
 </form>

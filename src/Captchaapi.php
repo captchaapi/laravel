@@ -4,24 +4,28 @@ declare(strict_types=1);
 
 namespace Captchaapi\Laravel;
 
-/**
- * Singleton-backed runtime state for the package.
- *
- * Exposed via the Captchaapi facade. Two responsibilities:
- *
- *   1. Configuration accessors (siteKey, baseUrl, locale, …) — typed wrappers
- *      around config('captchaapi.*') so callers don't deal with mixed return
- *      types from the framework helper.
- *
- *   2. Test mode toggle — when isFake() is true, ValidCaptcha short-circuits
- *      to "always pass" so feature tests don't have to mint real attestations.
- */
+use RuntimeException;
+
+/** Singleton behind the Captchaapi facade: typed config accessors plus the fake() toggle. */
 final class Captchaapi
 {
     private bool $fake = false;
 
+    /**
+     * Restricted to the testing env: in Octane/Swoole/RoadRunner the singleton
+     * survives across requests, so a stray call elsewhere would disable
+     * verification permanently.
+     *
+     * @throws RuntimeException when called outside the testing environment.
+     */
     public function fake(): void
     {
+        if (! app()->environment('testing')) {
+            throw new RuntimeException(
+                'Captchaapi::fake() may only be called in the testing environment.'
+            );
+        }
+
         $this->fake = true;
     }
 
@@ -45,8 +49,13 @@ final class Captchaapi
     public function baseUrl(): ?string
     {
         $value = config('captchaapi.base_url');
+        if (! is_string($value) || $value === '') {
+            return null;
+        }
 
-        return is_string($value) && $value !== '' ? $value : null;
+        $trimmed = rtrim($value, '/');
+
+        return $trimmed === '' ? null : $trimmed;
     }
 
     public function locale(): ?string
@@ -60,7 +69,17 @@ final class Captchaapi
     {
         $value = config('captchaapi.preload', 'lazy');
 
-        return $value === 'eager' ? 'eager' : 'lazy';
+        if ($value === 'eager') {
+            return 'eager';
+        }
+
+        if ($value !== 'lazy' && $this->debug()) {
+            logger()->warning('Captchaapi: invalid preload value, falling back to "lazy".', [
+                'configured' => $value,
+            ]);
+        }
+
+        return 'lazy';
     }
 
     public function debug(): bool
