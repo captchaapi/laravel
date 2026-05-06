@@ -113,15 +113,17 @@ class RegisterForm extends Component
 
     public function register(): void
     {
-        $this->validate([
-            'email'               => 'required|email',
-            'captcha_attestation' => $this->rulesForCaptcha()['captcha_attestation'],
+        $this->validateWithCaptcha([
+            'email' => 'required|email',
         ]);
 
         // proceed — captcha_attestation has been validated
     }
 }
 ```
+
+`validateWithCaptcha()` is sugar for `$this->validate(array_merge($rules, $this->rulesForCaptcha()))`.
+If you need to compose `validateOnly()` flows yourself, `rulesForCaptcha()` is still public.
 
 In the component view, use the Livewire-aware form wrapper:
 

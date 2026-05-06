@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Captchaapi\Laravel\Concerns\WithCaptcha;
 use Captchaapi\Laravel\Facades\Captchaapi;
 use Captchaapi\Laravel\Rules\ValidCaptcha;
+use Captchaapi\Laravel\Tests\Helpers\Attestation;
 
 beforeEach(function (): void {
     Captchaapi::unfake();
@@ -45,9 +46,59 @@ it('the trait property survives assignment of a real attestation string', functi
         use WithCaptcha;
     };
 
-    $component->captcha_attestation = mintAttestation();
+    $component->captcha_attestation = Attestation::mint();
 
     expect($component->captcha_attestation)
         ->toBeString()
         ->toContain('.');
+});
+
+it('validateWithCaptcha() merges the captcha rule into caller-supplied rules', function (): void {
+    $component = new class
+    {
+        use WithCaptcha;
+
+        /** @var array<string, mixed>|null */
+        public ?array $capturedRules = null;
+
+        /**
+         * @param  array<string, mixed>  $rules
+         * @return array<string, mixed>
+         */
+        public function validate(array $rules = [], array $messages = [], array $attributes = []): array
+        {
+            $this->capturedRules = $rules;
+
+            return [];
+        }
+
+        /**
+         * @return array<string, mixed>
+         */
+        public function callValidateWithCaptcha(): array
+        {
+            return $this->validateWithCaptcha(['email' => 'required|email']);
+        }
+    };
+
+    $component->callValidateWithCaptcha();
+
+    expect($component->capturedRules)->toHaveKeys(['email', 'captcha_attestation']);
+    expect($component->capturedRules['email'])->toBe('required|email');
+
+    $captchaRule = collect($component->capturedRules['captcha_attestation'])
+        ->first(fn ($r): bool => $r instanceof ValidCaptcha);
+    expect($captchaRule)->toBeInstanceOf(ValidCaptcha::class);
+});
+
+it('the trait does not declare a #[Validate] attribute on captcha_attestation', function (): void {
+    $reflection = new ReflectionProperty(
+        new class
+        {
+            use WithCaptcha;
+        },
+        'captcha_attestation',
+    );
+
+    expect($reflection->getAttributes())->toBeEmpty();
 });
