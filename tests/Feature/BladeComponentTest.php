@@ -87,12 +87,12 @@ it('<x-captchaapi::livewire-form> rejects invalid action names', function (): vo
     try {
         $rendered = false;
         try {
-            (string) view()->file($tmp)->render();
+            view()->file($tmp)->render();
             $rendered = true;
         } catch (Throwable $e) {
             // Blade wraps render-time exceptions in ViewException; walk the chain.
             $cause = $e;
-            while ($cause !== null && ! $cause instanceof InvalidArgumentException) {
+            while ($cause instanceof Throwable && ! $cause instanceof InvalidArgumentException) {
                 $cause = $cause->getPrevious();
             }
 
