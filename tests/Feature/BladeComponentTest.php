@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\MessageBag;
+use Illuminate\Support\ViewErrorBag;
+
 it('<x-captchaapi::widget /> renders a script tag with the configured site key', function (): void {
     $rendered = (string) view()->file(__DIR__.'/../fixtures/widget-default.blade.php')->render();
 
@@ -110,4 +113,36 @@ it('<x-captchaapi::livewire-form> forwards extra HTML attributes to the form', f
 
     expect($rendered)->toContain('class="space-y-4"');
     expect($rendered)->toContain('id="signup-form"');
+});
+
+it('<x-captchaapi::error /> renders nothing when no error is present', function (): void {
+    view()->share('errors', new ViewErrorBag);
+
+    $rendered = trim((string) view()->file(__DIR__.'/../fixtures/error-default.blade.php')->render());
+
+    expect($rendered)->toBe('');
+});
+
+it('<x-captchaapi::error /> renders the captcha_attestation error in a <p role="alert">', function (): void {
+    $bag = new ViewErrorBag;
+    $bag->put('default', new MessageBag(['captcha_attestation' => 'CAPTCHA verification failed.']));
+    view()->share('errors', $bag);
+
+    $rendered = (string) view()->file(__DIR__.'/../fixtures/error-default.blade.php')->render();
+
+    expect($rendered)->toContain('<p role="alert">CAPTCHA verification failed.</p>');
+});
+
+it('<x-captchaapi::error /> respects :for, :as, and merges extra attributes', function (): void {
+    $bag = new ViewErrorBag;
+    $bag->put('default', new MessageBag(['my_field' => 'oops']));
+    view()->share('errors', $bag);
+
+    $rendered = (string) view()->file(__DIR__.'/../fixtures/error-overridden.blade.php')->render();
+
+    expect($rendered)
+        ->toContain('<span')
+        ->toContain('role="alert"')
+        ->toContain('class="text-red-600"')
+        ->toContain('>oops</span>');
 });

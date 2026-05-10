@@ -140,6 +140,36 @@ The wrapper sets `data-captcha-mode="event"`, includes the hidden
 attestation input, and dispatches to your Livewire `register` method
 once the attestation arrives.
 
+### Showing the validation error
+
+When `ValidCaptcha` rejects an attestation (expired, replayed, malformed
+signature), Laravel attaches the message to the `captcha_attestation`
+field. Render it with the included helper:
+
+```blade
+<x-captchaapi::error />
+```
+
+Defaults to `:for="captcha_attestation"` and renders a `<p role="alert">`.
+Override the field name, the wrapping tag, and pass through any
+attributes:
+
+```blade
+<x-captchaapi::error for="captcha_attestation" as="span" class="text-red-600" />
+```
+
+The component is a thin wrapper around Laravel's `@error` directive — if
+you prefer to keep markup in your own templates, write it yourself:
+
+```blade
+@error('captcha_attestation')
+    <p role="alert">{{ $message }}</p>
+@enderror
+```
+
+Both approaches work for plain HTML forms (after a redirect-with-errors)
+and for Livewire (after `validateWithCaptcha()`).
+
 ## Status element styling
 
 Place a `<div data-captcha-status></div>` anywhere inside (or near)

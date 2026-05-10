@@ -7,6 +7,20 @@ and the format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [2.0.1] - 2026-05-10
+
+### Added
+
+- **`<x-captchaapi::error />` Blade component** for rendering the
+  CAPTCHA validation error (expired attestation, replay attempt, bad
+  signature). Defaults to `:for="captcha_attestation"` — matching the
+  field name used by `WithCaptcha` and `<x-captchaapi::livewire-form>`
+  — and renders a `<p role="alert">`. Both `:for` and the wrapping tag
+  (`:as`) are overridable, and extra attributes (e.g. `class`) merge
+  through. Internally a thin wrapper around Laravel's `@error`
+  directive; the README documents the manual `@error` form too for
+  projects that prefer to keep markup in their own templates.
+
 ## [1.0.2] - 2026-05-04
 
 ### Fixed
