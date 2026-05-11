@@ -41,7 +41,7 @@ final class Captchaapi
 
     public function enabled(): bool
     {
-        return (bool) config('captchaapi.enabled', true);
+        return config()->boolean('captchaapi.enabled');
     }
 
     public function siteKey(): ?string
