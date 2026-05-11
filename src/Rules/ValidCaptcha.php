@@ -25,6 +25,10 @@ final class ValidCaptcha implements ValidationRule
 
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
+        if (! Captchaapi::enabled()) {
+            return;
+        }
+
         if (Captchaapi::isFake()) {
             return;
         }

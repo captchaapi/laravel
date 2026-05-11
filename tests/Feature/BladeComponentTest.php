@@ -12,6 +12,14 @@ it('<x-captchaapi::widget /> renders a script tag with the configured site key',
     expect($rendered)->toContain('<script src="https://captchaapi.eu/captcha.js" defer></script>');
 });
 
+it('<x-captchaapi::widget /> renders nothing when captchaapi.enabled is false', function (): void {
+    config(['captchaapi.enabled' => false]);
+
+    $rendered = trim((string) view()->file(__DIR__.'/../fixtures/widget-default.blade.php')->render());
+
+    expect($rendered)->toBe('');
+});
+
 it('<x-captchaapi::widget /> includes locale when configured', function (): void {
     config(['captchaapi.locale' => 'cs']);
 

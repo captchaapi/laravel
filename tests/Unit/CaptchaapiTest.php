@@ -40,3 +40,11 @@ it('baseUrl() returns null when only slashes are configured', function (): void 
 
     expect(Captchaapi::baseUrl())->toBeNull();
 });
+
+it('enabled() reflects config(captchaapi.enabled)', function (): void {
+    config(['captchaapi.enabled' => true]);
+    expect(Captchaapi::enabled())->toBeTrue();
+
+    config(['captchaapi.enabled' => false]);
+    expect(Captchaapi::enabled())->toBeFalse();
+});

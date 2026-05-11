@@ -2,6 +2,10 @@
     Loads the captchaapi.eu widget on the current page. Place once per layout.
     All props default to config/captchaapi.php values; per-form data-captcha-mode
     still overrides the global :mode set here.
+
+    Renders nothing when config('captchaapi.enabled') is false — single switch
+    to drop the widget out of local / CI / staging without conditionals in
+    every layout.
 --}}
 @props([
     'siteKey' => null,
@@ -11,6 +15,7 @@
     'debug'   => null,
     'mode'    => null,
 ])
+@if(\Captchaapi\Laravel\Facades\Captchaapi::enabled())
 @php
     $resolvedSiteKey = $siteKey ?? \Captchaapi\Laravel\Facades\Captchaapi::siteKey();
     $resolvedBaseUrl = $baseUrl ?? \Captchaapi\Laravel\Facades\Captchaapi::baseUrl();
@@ -41,3 +46,4 @@
     @endif
 </script>
 <script src="{{ $widgetSrc }}" defer></script>
+@endif

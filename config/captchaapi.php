@@ -6,6 +6,26 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Enabled
+    |--------------------------------------------------------------------------
+    |
+    | Master kill-switch for the package. When false, the `ValidCaptcha`
+    | rule passes silently and `<x-captchaapi::widget />` renders nothing —
+    | giving you a single env var to disable captcha protection in local
+    | development, CI, staging, or for incident response without ripping
+    | out wiring or conditionally rendering markup in every consumer
+    | template.
+    |
+    | Defaults to true so existing installs keep working unchanged. Flip
+    | to false (commonly via CAPTCHAAPI_ENABLED=false in .env) when you
+    | want the feature off.
+    |
+    */
+
+    'enabled' => (bool) env('CAPTCHAAPI_ENABLED', true),
+
+    /*
+    |--------------------------------------------------------------------------
     | Site key
     |--------------------------------------------------------------------------
     |

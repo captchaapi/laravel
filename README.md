@@ -227,10 +227,23 @@ visually identical without color. If you opt out of the widget
 defaults, supply per-state colors in your own CSS so the two stay
 distinguishable.
 
+## Disabling the package
+
+Flip `CAPTCHAAPI_ENABLED=false` in `.env` to disable both the validation
+rule and the widget without removing any wiring. The `ValidCaptcha` rule
+passes silently and `<x-captchaapi::widget />` renders nothing, so you
+can keep the trait, the rule, and the Blade markup in place across
+local, CI, and staging environments where no live site key is set.
+
+Defaults to `true`, so existing installs keep working unchanged. This is
+a permanent kill-switch, not a per-test bypass — for that, use
+`FakeCaptchaapi::enable()` (see [Testing](#testing)).
+
 ## Configuration reference
 
 | Config key                  | ENV variable                    | Default | Purpose                                                                                  |
 | --------------------------- | ------------------------------- | ------- | ---------------------------------------------------------------------------------------- |
+| `enabled`                   | `CAPTCHAAPI_ENABLED`            | `true`  | Master kill-switch. When false, the rule passes silently and the widget renders nothing. |
 | `site_key`                  | `CAPTCHAAPI_SITE_KEY`           | `null`  | Public site key from the dashboard. Required for widget rendering.                       |
 | `secret_keys`               | `CAPTCHAAPI_SECRET_KEYS`        | `[]`    | Comma-separated HMAC secrets. Multi-value enables zero-downtime rotation.                |
 | `base_url`                  | `CAPTCHAAPI_BASE_URL`           | `null`  | Override the API origin. Use only when self-hosting / proxying.                          |

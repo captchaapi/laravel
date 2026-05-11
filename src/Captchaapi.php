@@ -39,6 +39,11 @@ final class Captchaapi
         return $this->fake;
     }
 
+    public function enabled(): bool
+    {
+        return (bool) config('captchaapi.enabled', true);
+    }
+
     public function siteKey(): ?string
     {
         $value = config('captchaapi.site_key');

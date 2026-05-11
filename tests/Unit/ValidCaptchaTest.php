@@ -239,6 +239,16 @@ it('bypasses every check when Captchaapi::fake() is enabled', function (): void 
     expect(runRule(Attestation::mint(['exp' => time() - 9999])))->toBeNull();
 });
 
+// ─── Kill-switch ──────────────────────────────────────────────────────────────
+
+it('passes silently when captchaapi.enabled is false', function (): void {
+    config(['captchaapi.enabled' => false]);
+
+    expect(runRule('this is obvious garbage'))->toBeNull();
+    expect(runRule(Attestation::mint(secret: 'wrong_secret')))->toBeNull();
+    expect(runRule(Attestation::mint(['exp' => time() - 9999])))->toBeNull();
+});
+
 // ─── Rule helper ──────────────────────────────────────────────────────────────
 
 /** Returns null on success, the failure message string on failure. */

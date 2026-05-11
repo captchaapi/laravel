@@ -7,6 +7,27 @@ and the format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-05-11
+
+### Added
+
+- **`captchaapi.enabled` config key** as a master kill-switch for the
+  package. When set to `false` (via `CAPTCHAAPI_ENABLED=false` in `.env`),
+  `ValidCaptcha::validate()` passes silently and
+  `<x-captchaapi::widget />` renders nothing. Lets you keep the
+  validation rule, the Livewire trait, and the Blade markup in place
+  across environments that don't have a live site key (local dev, CI,
+  staging) without conditional render boilerplate or stubbed config.
+
+  Defaults to `true`, so existing installs are unaffected. The new
+  accessor `Captchaapi::enabled()` exposes the resolved value for
+  consumer code that wants to gate its own logic on the same flag.
+
+  Distinct from `FakeCaptchaapi::enable()`: fake mode is a per-test
+  bypass that throws outside the testing environment; the new
+  `enabled` flag is a permanent runtime switch safe to set in any
+  environment.
+
 ## [2.0.1] - 2026-05-10
 
 ### Added

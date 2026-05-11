@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static string|null locale()
  * @method static string preload()
  * @method static bool debug()
+ * @method static bool enabled()
  *
  * @see CaptchaapiManager
  */
