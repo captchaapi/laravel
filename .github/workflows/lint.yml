@@ -18,6 +18,7 @@ jobs:
         with:
           php-version: '8.4'
           extensions: mbstring, intl, json
+          tools: composer:v2
           coverage: none
 
       - name: Cache composer

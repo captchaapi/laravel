@@ -36,6 +36,7 @@ jobs:
         with:
           php-version: ${{ matrix.php }}
           extensions: mbstring, intl, json
+          tools: composer:v2
           coverage: none
 
       - name: Cache composer
@@ -66,6 +67,7 @@ jobs:
         with:
           php-version: '8.4'
           extensions: mbstring, intl, json
+          tools: composer:v2
           coverage: pcov
 
       - name: Install dependencies
