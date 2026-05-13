@@ -102,3 +102,59 @@ it('the trait does not declare a #[Validate] attribute on captcha_attestation', 
 
     expect($reflection->getAttributes())->toBeEmpty();
 });
+
+it('rulesForCaptcha() returns an empty array when captchaapi.enabled is false', function (): void {
+    config(['captchaapi.enabled' => false]);
+
+    $component = new class
+    {
+        use WithCaptcha;
+
+        /**
+         * @return array<string, mixed>
+         */
+        public function rules(): array
+        {
+            return $this->rulesForCaptcha();
+        }
+    };
+
+    expect($component->rules())->toBe([]);
+});
+
+it('validateWithCaptcha() does not inject captcha rules when captchaapi.enabled is false', function (): void {
+    config(['captchaapi.enabled' => false]);
+
+    $component = new class
+    {
+        use WithCaptcha;
+
+        /** @var array<string, mixed>|null */
+        public ?array $capturedRules = null;
+
+        /**
+         * @param  array<string, mixed>  $rules
+         * @return array<string, mixed>
+         */
+        public function validate(array $rules = [], array $messages = [], array $attributes = []): array
+        {
+            $this->capturedRules = $rules;
+
+            return [];
+        }
+
+        /**
+         * @return array<string, mixed>
+         */
+        public function callValidateWithCaptcha(): array
+        {
+            return $this->validateWithCaptcha(['email' => 'required|email']);
+        }
+    };
+
+    $component->callValidateWithCaptcha();
+
+    expect($component->capturedRules)
+        ->toBe(['email' => 'required|email'])
+        ->not->toHaveKey('captcha_attestation');
+});

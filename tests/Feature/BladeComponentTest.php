@@ -123,6 +123,58 @@ it('<x-captchaapi::livewire-form> forwards extra HTML attributes to the form', f
     expect($rendered)->toContain('id="signup-form"');
 });
 
+it('<x-captchaapi::livewire-form> falls back to wire:submit when captchaapi.enabled is false', function (): void {
+    config(['captchaapi.enabled' => false]);
+
+    $rendered = (string) view()->file(__DIR__.'/../fixtures/livewire-form.blade.php')->render();
+
+    expect($rendered)
+        ->toContain('<form')
+        ->toContain('wire:submit="register"')
+        ->toContain('SLOT_CONTENT_MARKER')
+        ->not->toContain('data-captcha')
+        ->not->toContain('data-captcha-mode')
+        ->not->toContain('captchaapi:attested')
+        ->not->toContain('name="captcha_attestation"');
+});
+
+it('<x-captchaapi::livewire-form> still validates :action when captchaapi.enabled is false', function (): void {
+    config(['captchaapi.enabled' => false]);
+
+    $tmp = tempnam(sys_get_temp_dir(), 'captchaapi-form-').'.blade.php';
+    file_put_contents($tmp, '<x-captchaapi::livewire-form action="not a valid identifier"></x-captchaapi::livewire-form>');
+
+    try {
+        $rendered = false;
+        try {
+            view()->file($tmp)->render();
+            $rendered = true;
+        } catch (Throwable $e) {
+            $cause = $e;
+            while ($cause instanceof Throwable && ! $cause instanceof InvalidArgumentException) {
+                $cause = $cause->getPrevious();
+            }
+
+            expect($cause)->toBeInstanceOf(InvalidArgumentException::class);
+            expect($cause->getMessage())->toContain('must be a valid PHP identifier');
+        }
+        expect($rendered)->toBeFalse();
+    } finally {
+        @unlink($tmp);
+    }
+});
+
+it('<x-captchaapi::livewire-form> kill-switch fallback still forwards extra HTML attributes', function (): void {
+    config(['captchaapi.enabled' => false]);
+
+    $rendered = (string) view()->file(__DIR__.'/../fixtures/livewire-form-with-attrs.blade.php')->render();
+
+    expect($rendered)
+        ->toContain('class="space-y-4"')
+        ->toContain('id="signup-form"')
+        ->toContain('wire:submit="signup"');
+});
+
 it('<x-captchaapi::error /> renders nothing when no error is present', function (): void {
     view()->share('errors', new ViewErrorBag);
 

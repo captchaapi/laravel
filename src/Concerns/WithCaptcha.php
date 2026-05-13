@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Captchaapi\Laravel\Concerns;
 
+use Captchaapi\Laravel\Facades\Captchaapi;
 use Captchaapi\Laravel\Rules\ValidCaptcha;
 
 /** Livewire trait: adds $captcha_attestation and the validateWithCaptcha() helper. */
@@ -28,6 +29,10 @@ trait WithCaptcha
      */
     protected function rulesForCaptcha(): array
     {
+        if (! Captchaapi::enabled()) {
+            return [];
+        }
+
         return [
             'captcha_attestation' => ['required', 'string', new ValidCaptcha],
         ];
