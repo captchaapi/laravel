@@ -3,9 +3,11 @@
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/captchaapi/laravel.svg?style=flat-square)](https://packagist.org/packages/captchaapi/laravel)
 [![Total Downloads](https://img.shields.io/packagist/dt/captchaapi/laravel.svg?style=flat-square)](https://packagist.org/packages/captchaapi/laravel)
 [![Tests](https://img.shields.io/github/actions/workflow/status/captchaapi/laravel/tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/captchaapi/laravel/actions/workflows/tests.yml)
+[![PHP Version](https://img.shields.io/packagist/dependency-v/captchaapi/laravel/php?style=flat-square)](https://packagist.org/packages/captchaapi/laravel)
+[![Laravel Compatibility](https://badge.laravel.cloud/badge/captchaapi/laravel?style=flat)](https://packagist.org/packages/captchaapi/laravel)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](LICENSE)
 
-Official Laravel SDK for [captchaapi.eu](https://captchaapi.eu) — EU-hosted,
+Official Laravel SDK for [captchaapi.eu](https://captchaapi.eu/?utm_source=github&utm_medium=referral&utm_campaign=laravel-package) — EU-hosted,
 GDPR-compliant proof-of-work CAPTCHA. Drop-in Blade component, validation
 rule, and Livewire trait. No cookies, no tracking, no Google.
 
