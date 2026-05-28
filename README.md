@@ -44,8 +44,8 @@ php artisan vendor:publish --tag=captchaapi-config
 Set the credentials in `.env`:
 
 ```dotenv
-CAPTCHAAPI_SITE_KEY=sk_pub_your_site_key
-CAPTCHAAPI_SECRET_KEYS=your_current_secret
+CAPTCHAAPI_SITE_KEY=pk_live_...
+CAPTCHAAPI_SECRET_KEYS=sk_live_...
 # During rotation:
 # CAPTCHAAPI_SECRET_KEYS=your_current_secret,your_pending_secret
 ```
