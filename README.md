@@ -13,7 +13,7 @@ rule, and Livewire trait. No cookies, no tracking, no Google.
 
 ## Why captchaapi.eu
 
-- **EU-hosted** (Hetzner Frankfurt) — GDPR-compliant by default, no data
+- **EU-hosted** (Hetzner Nuremberg) — GDPR-compliant by default, no data
   ever leaves the EU.
 - **Proof-of-work** — invisible to legitimate visitors, no friction
   puzzles to solve.
