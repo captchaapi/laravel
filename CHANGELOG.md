@@ -7,6 +7,18 @@ and the format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [3.0.1] - 2026-06-10
+
+### Fixed
+
+- **Per-request memoization restored in `ValidCaptcha`.** Frameworks like
+  Fortify run the validator twice in a single request. Server-side
+  verification is single-use, so the second pass hit an already-consumed token
+  and returned `invalid_token`, rejecting a visitor who had passed the first
+  time — every Fortify login and registration failed. The rule now memoizes a
+  success per request and short-circuits the repeat call, exactly as it did
+  before 3.0 (when the single-use guard was a local `jti` cache).
+
 ## [3.0.0] - 2026-06-10
 
 A breaking release: verification moved from a local HMAC check to a

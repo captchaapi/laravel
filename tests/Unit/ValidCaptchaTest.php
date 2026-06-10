@@ -173,6 +173,17 @@ it('makes exactly one verify call on success', function (): void {
     Http::assertSentCount(1);
 });
 
+it('memoizes a success so a repeated validation in the same request skips the verify call', function (): void {
+    // Fortify validates twice per request; the second pass must not re-verify a
+    // single-use response the server already consumed.
+    fakeVerify(['success' => true]);
+
+    expect(runRule('token.solution'))->toBeNull();
+    expect(runRule('token.solution'))->toBeNull();
+
+    Http::assertSentCount(1);
+});
+
 // ─── Bypass ─────────────────────────────────────────────────────────────────────
 
 it('bypasses verification and sends nothing when Captchaapi::fake() is enabled', function (): void {

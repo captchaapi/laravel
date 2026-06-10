@@ -34,6 +34,16 @@ final class ValidCaptcha implements ValidationRule
             return;
         }
 
+        // Frameworks like Fortify run the validator twice in one request. The
+        // response is single-use server-side, so the second verify would hit an
+        // already-consumed token and reject a visitor who passed the first time.
+        // Memoize a success per request and short-circuit the repeat call.
+        $memoKey = $this->memoKey($value);
+
+        if ($this->isMemoized($memoKey)) {
+            return;
+        }
+
         $secret = Captchaapi::secret();
 
         if ($secret === null) {
@@ -63,10 +73,36 @@ final class ValidCaptcha implements ValidationRule
         }
 
         if ($response->json('success') === true) {
+            $this->memoize($memoKey);
+
             return;
         }
 
         $fail($this->rejectionMessage());
+    }
+
+    private function memoKey(string $value): string
+    {
+        // Non-cryptographic — the value is opaque and the key only spans one request.
+        return '_captchaapi_verified_'.hash('xxh64', $value);
+    }
+
+    private function isMemoized(string $memoKey): bool
+    {
+        if (! app()->bound('request')) {
+            return false;
+        }
+
+        return (bool) request()->attributes->get($memoKey, false);
+    }
+
+    private function memoize(string $memoKey): void
+    {
+        if (! app()->bound('request')) {
+            return;
+        }
+
+        request()->attributes->set($memoKey, true);
     }
 
     private function whenUnavailable(Closure $fail): void
