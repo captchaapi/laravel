@@ -17,9 +17,9 @@ rule, and Livewire trait. No cookies, no tracking, no Google.
   ever leaves the EU.
 - **Proof-of-work** — invisible to legitimate visitors, no friction
   puzzles to solve.
-- **Local HMAC verification** — no server-to-server round-trip on every
-  form submit; your backend verifies the signed attestation against your
-  secret key in pure PHP.
+- **Server-side verification** — your backend confirms each response with
+  captchaapi.eu over a single call, secured by your secret key. The same
+  model every major CAPTCHA uses, so the secret never reaches the browser.
 - **Livewire-native** — first-class trait + Blade wrapper instead of just
   plain HTML form support.
 
@@ -45,12 +45,11 @@ Set the credentials in `.env`:
 
 ```dotenv
 CAPTCHAAPI_SITE_KEY=pk_live_...
-CAPTCHAAPI_SECRET_KEYS=sk_live_...
-# During rotation:
-# CAPTCHAAPI_SECRET_KEYS=your_current_secret,your_pending_secret
+CAPTCHAAPI_SECRET=sk_live_...
 ```
 
-Get your keys from the [project dashboard](https://captchaapi.eu/dashboard).
+The site key is public and goes in the browser; the secret stays on your
+server. Get both from the [project dashboard](https://captchaapi.eu/dashboard).
 
 ## Usage
 
@@ -80,7 +79,7 @@ use Captchaapi\Laravel\Rules\ValidCaptcha;
 
 $request->validate([
     'email'               => ['required', 'email'],
-    'captcha_attestation' => ['required', 'string', new ValidCaptcha],
+    'captchaapi_response' => ['required', 'string', new ValidCaptcha],
 ]);
 ```
 
@@ -89,7 +88,7 @@ Or via the string alias:
 ```php
 $request->validate([
     'email'               => ['required', 'email'],
-    'captcha_attestation' => ['required', 'captcha'],
+    'captchaapi_response' => ['required', 'captcha'],
 ]);
 ```
 
@@ -119,7 +118,7 @@ class RegisterForm extends Component
             'email' => 'required|email',
         ]);
 
-        // proceed — captcha_attestation has been validated
+        // proceed — captchaapi_response has been verified
     }
 }
 ```
@@ -139,32 +138,32 @@ In the component view, use the Livewire-aware form wrapper:
 ```
 
 The wrapper sets `data-captcha-mode="event"`, includes the hidden
-attestation input, and dispatches to your Livewire `register` method
-once the attestation arrives.
+`captchaapi_response` input, and dispatches to your Livewire `register`
+method once the response arrives.
 
 ### Showing the validation error
 
-When `ValidCaptcha` rejects an attestation (expired, replayed, malformed
-signature), Laravel attaches the message to the `captcha_attestation`
-field. Render it with the included helper:
+When `ValidCaptcha` rejects a response (invalid, expired, or already
+used), Laravel attaches the message to the `captchaapi_response` field.
+Render it with the included helper:
 
 ```blade
 <x-captchaapi::error />
 ```
 
-Defaults to `:for="captcha_attestation"` and renders a `<p role="alert">`.
+Defaults to `:for="captchaapi_response"` and renders a `<p role="alert">`.
 Override the field name, the wrapping tag, and pass through any
 attributes:
 
 ```blade
-<x-captchaapi::error for="captcha_attestation" as="span" class="text-red-600" />
+<x-captchaapi::error for="captchaapi_response" as="span" class="text-red-600" />
 ```
 
 The component is a thin wrapper around Laravel's `@error` directive — if
 you prefer to keep markup in your own templates, write it yourself:
 
 ```blade
-@error('captcha_attestation')
+@error('captchaapi_response')
     <p role="alert">{{ $message }}</p>
 @enderror
 ```
@@ -243,64 +242,63 @@ a permanent kill-switch, not a per-test bypass — for that, use
 
 ## Configuration reference
 
-| Config key                  | ENV variable                    | Default | Purpose                                                                                  |
-| --------------------------- | ------------------------------- | ------- | ---------------------------------------------------------------------------------------- |
-| `enabled`                   | `CAPTCHAAPI_ENABLED`            | `true`  | Master kill-switch. When false, the rule passes silently and the widget renders nothing. |
-| `site_key`                  | `CAPTCHAAPI_SITE_KEY`           | `null`  | Public site key from the dashboard. Required for widget rendering.                       |
-| `secret_keys`               | `CAPTCHAAPI_SECRET_KEYS`        | `[]`    | Comma-separated HMAC secrets. Multi-value enables zero-downtime rotation.                |
-| `base_url`                  | `CAPTCHAAPI_BASE_URL`           | `null`  | Override the API origin. Use only when self-hosting / proxying.                          |
-| `locale`                    | `CAPTCHAAPI_LOCALE`             | `null`  | Force widget language (`en`, `de`, `cs`, …). Falls back to `<html lang>` then `en`.      |
-| `preload`                   | `CAPTCHAAPI_PRELOAD`            | `lazy`  | `lazy` waits for first form interaction; `eager` fires the challenge on page load.       |
-| `debug`                     | `CAPTCHAAPI_DEBUG`              | `false` | Log timing breakdown in the browser console.                                             |
-| `mode`                      | `CAPTCHAAPI_MODE`               | `null`  | `submit` (native form POST) or `event` (CustomEvent for Livewire/SPA).                   |
-| `replay_protection`         | `CAPTCHAAPI_REPLAY_PROTECTION`  | `true`  | Cache each attestation `jti` and reject duplicates within its TTL window.                |
-| `cache_prefix`              | —                               | `captchaapi:jti:` | Prefix for cached jtis. Change only on collision with another package.         |
-| `clock_skew_leeway`         | `CAPTCHAAPI_CLOCK_SKEW_LEEWAY`  | `60`    | Seconds an attestation's `iat` may sit in the future before it is rejected.              |
+| Config key   | ENV variable                | Default | Purpose                                                                                                |
+| ------------ | --------------------------- | ------- | ------------------------------------------------------------------------------------------------------ |
+| `enabled`    | `CAPTCHAAPI_ENABLED`        | `true`  | Master kill-switch. When false, the rule passes silently and the widget renders nothing.               |
+| `site_key`   | `CAPTCHAAPI_SITE_KEY`       | `null`  | Public site key from the dashboard. Required for widget rendering.                                      |
+| `secret`     | `CAPTCHAAPI_SECRET`         | `null`  | Project secret, sent as a Bearer token on the verify call. Server-side only.                            |
+| `base_url`   | `CAPTCHAAPI_BASE_URL`       | `null`  | Override the API origin for the widget and the verify call. Defaults to `https://captchaapi.eu`.        |
+| `timeout`    | `CAPTCHAAPI_VERIFY_TIMEOUT` | `5`     | Seconds to wait for the verify call before treating the server as unreachable.                          |
+| `fail_open`  | `CAPTCHAAPI_FAIL_OPEN`      | `true`  | When the server is unreachable or returns a 5xx: `true` lets the submission through, `false` rejects it with a try-again message. |
+| `locale`     | `CAPTCHAAPI_LOCALE`         | `null`  | Force widget language (`en`, `de`, `cs`, …). Falls back to `<html lang>` then `en`.                     |
+| `preload`    | `CAPTCHAAPI_PRELOAD`        | `lazy`  | `lazy` waits for first form interaction; `eager` fires the challenge on page load.                      |
+| `debug`      | `CAPTCHAAPI_DEBUG`          | `false` | Log timing breakdown in the browser console.                                                            |
+| `mode`       | `CAPTCHAAPI_MODE`           | `null`  | `submit` (native form POST) or `event` (CustomEvent for Livewire/SPA).                                  |
+
+## Fail policy
+
+The verify call can fail to reach a verdict — the server is unreachable or
+returns a 5xx. `fail_open` decides what happens, and it defaults to **true**:
+the submission goes through. A CAPTCHA guards a public form, so your own
+outage blocking every submission is worse than the rare bot slipping past
+during it, and an attacker can't reach this path anyway — verification is
+server-to-server, off the browser.
+
+Set it to **false** for sensitive actions (login, payment) where a missed bot
+costs more than a blocked visitor:
+
+```dotenv
+CAPTCHAAPI_FAIL_OPEN=false
+```
+
+The visitor is then asked to try again, never told they failed the CAPTCHA.
+There is no automatic retry on either setting: the response is single-use, and
+a second verify call would spend a token the visitor already solved.
 
 ## Secret key rotation
 
-The package accepts any matching secret in `CAPTCHAAPI_SECRET_KEYS` (a
-comma-separated list). Rotation has four steps:
+Rotate from the dashboard — the package needs no list of keys. While a
+rotation is pending, the server accepts **both** the old and the new secret on
+every challenge issued, so you deploy the new key without a hard cutover:
 
-1. In the dashboard, click **Rotate secret key** — generates a new key
-   in the *pending* state. Your backend keeps signing with the current key.
-2. Add the pending key alongside the current one in your `.env`:
-   ```dotenv
-   CAPTCHAAPI_SECRET_KEYS=current_secret,pending_secret
-   ```
-   Deploy.
-3. In the dashboard, click **Activate pending key**. The backend now
-   signs with the new key; your app accepts both during the handover.
-4. Drop the old key on the next deploy.
+1. In the dashboard, click **Rotate secret key** — issues a new key while the
+   current one keeps working.
+2. Update `CAPTCHAAPI_SECRET` in your `.env` and deploy. From here both keys
+   verify, so the timing of your deploy doesn't matter.
+3. In the dashboard, activate the new key, then retire the old one.
 
-For suspected-compromise scenarios, use the dashboard's **Revoke
-immediately** — replaces the key in one step and skips the pending
-phase. Briefly accepts no attestations until you deploy the new key.
+The only thing tied to the old key is a challenge a visitor was already
+solving when you clicked **Rotate** — it lives at most the token lifetime
+(~2 minutes), so any brief overlap clears itself.
 
-## Replay protection
-
-By default the validation rule caches each accepted attestation's `jti`
-(unique identifier in the payload) for the remainder of its TTL. A
-captured-in-transit attestation can therefore be submitted only once,
-even within its 5-minute validity window.
-
-This requires a working cache driver (the application's default cache
-via `Cache::store()`). Disable in `config/captchaapi.php` if your cache
-is unreliable or unavailable:
-
-```php
-'replay_protection' => false,
-```
-
-Use **Redis**, **Memcached**, or the **database** cache driver in
-production. The `file` and `array` drivers don't have an atomic
-`Cache::add()`, so concurrent submissions can race past the replay
-check.
+For a suspected compromise, use **Revoke immediately** to drop the old key in
+one step. This skips the overlap, so in-flight solutions fail until the new
+secret is deployed.
 
 ## Testing
 
 In feature tests, enable fake mode so `ValidCaptcha` accepts any input
-without requiring you to mint real attestations:
+without a real response or a call to the server:
 
 ```php
 use Captchaapi\Laravel\Testing\FakeCaptchaapi;

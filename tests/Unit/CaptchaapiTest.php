@@ -48,3 +48,42 @@ it('enabled() reflects config(captchaapi.enabled)', function (): void {
     config(['captchaapi.enabled' => false]);
     expect(Captchaapi::enabled())->toBeFalse();
 });
+
+it('secret() returns the configured secret or null when blank', function (): void {
+    config(['captchaapi.secret' => 'sk_live_abc']);
+    expect(Captchaapi::secret())->toBe('sk_live_abc');
+
+    config(['captchaapi.secret' => '']);
+    expect(Captchaapi::secret())->toBeNull();
+
+    config(['captchaapi.secret' => null]);
+    expect(Captchaapi::secret())->toBeNull();
+});
+
+it('verifyUrl() appends the verify path to the default origin', function (): void {
+    config(['captchaapi.base_url' => null]);
+
+    expect(Captchaapi::verifyUrl())->toBe('https://captchaapi.eu/api/v1/captcha/verify');
+});
+
+it('verifyUrl() honours a base_url override', function (): void {
+    config(['captchaapi.base_url' => 'https://proxy.example.com/']);
+
+    expect(Captchaapi::verifyUrl())->toBe('https://proxy.example.com/api/v1/captcha/verify');
+});
+
+it('verifyTimeout() returns the configured seconds, falling back to 5 for non-positive values', function (): void {
+    config(['captchaapi.timeout' => 12]);
+    expect(Captchaapi::verifyTimeout())->toBe(12);
+
+    config(['captchaapi.timeout' => 0]);
+    expect(Captchaapi::verifyTimeout())->toBe(5);
+});
+
+it('failOpen() defaults to true and reflects config', function (): void {
+    config(['captchaapi.fail_open' => true]);
+    expect(Captchaapi::failOpen())->toBeTrue();
+
+    config(['captchaapi.fail_open' => false]);
+    expect(Captchaapi::failOpen())->toBeFalse();
+});

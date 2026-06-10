@@ -6,15 +6,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | CAPTCHA validation message
+    | CAPTCHA validation messages
     |--------------------------------------------------------------------------
     |
-    | Shown when ValidCaptcha rejects an attestation. Deliberately generic —
-    | revealing whether the failure was a bad signature, expired payload, or
-    | replay attempt would help an attacker probe the boundary.
+    | `failed` is shown when the server rejects the response — a bad, expired,
+    | or already-used token. Deliberately generic so it gives an attacker
+    | nothing to probe.
+    |
+    | `unavailable` is shown only when fail_open is off and the verify call
+    | could not reach the server. It asks the visitor to try again rather than
+    | blaming them for a captcha they may well have solved.
     |
     */
 
     'failed' => 'CAPTCHA verification failed. Please refresh the page and try again.',
+
+    'unavailable' => 'CAPTCHA verification is temporarily unavailable. Please try again in a moment.',
 
 ];

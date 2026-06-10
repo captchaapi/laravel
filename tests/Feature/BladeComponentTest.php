@@ -84,9 +84,9 @@ it('<x-captchaapi::livewire-form> wraps content with data-captcha + event mode',
 
     expect($rendered)->toContain('data-captcha');
     expect($rendered)->toContain('data-captcha-mode="event"');
-    expect($rendered)->toContain('<input type="hidden" name="captcha_attestation"');
+    expect($rendered)->toContain('<input type="hidden" name="captchaapi_response"');
     expect($rendered)->not->toContain('wire:model');
-    expect($rendered)->toContain('$wire.captcha_attestation = $event.detail.attestation');
+    expect($rendered)->toContain('$wire.captchaapi_response = $event.detail.response');
     expect($rendered)->toContain('$wire.register()');
     expect($rendered)->toContain('SLOT_CONTENT_MARKER');
 });
@@ -134,8 +134,8 @@ it('<x-captchaapi::livewire-form> falls back to wire:submit when captchaapi.enab
         ->toContain('SLOT_CONTENT_MARKER')
         ->not->toContain('data-captcha')
         ->not->toContain('data-captcha-mode')
-        ->not->toContain('captchaapi:attested')
-        ->not->toContain('name="captcha_attestation"');
+        ->not->toContain('captchaapi:solved')
+        ->not->toContain('name="captchaapi_response"');
 });
 
 it('<x-captchaapi::livewire-form> still validates :action when captchaapi.enabled is false', function (): void {
@@ -183,9 +183,9 @@ it('<x-captchaapi::error /> renders nothing when no error is present', function 
     expect($rendered)->toBe('');
 });
 
-it('<x-captchaapi::error /> renders the captcha_attestation error in a <p role="alert">', function (): void {
+it('<x-captchaapi::error /> renders the captchaapi_response error in a <p role="alert">', function (): void {
     $bag = new ViewErrorBag;
-    $bag->put('default', new MessageBag(['captcha_attestation' => 'CAPTCHA verification failed.']));
+    $bag->put('default', new MessageBag(['captchaapi_response' => 'CAPTCHA verification failed.']));
     view()->share('errors', $bag);
 
     $rendered = (string) view()->file(__DIR__.'/../fixtures/error-default.blade.php')->render();

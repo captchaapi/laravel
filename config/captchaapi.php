@@ -11,14 +11,8 @@ return [
     |
     | Master kill-switch for the package. When false, the `ValidCaptcha`
     | rule passes silently and `<x-captchaapi::widget />` renders nothing —
-    | giving you a single env var to disable captcha protection in local
-    | development, CI, staging, or for incident response without ripping
-    | out wiring or conditionally rendering markup in every consumer
-    | template.
-    |
-    | Defaults to true so existing installs keep working unchanged. Flip
-    | to false (commonly via CAPTCHAAPI_ENABLED=false in .env) when you
-    | want the feature off.
+    | a single env var to drop captcha protection in local development, CI,
+    | staging, or during an incident without touching wiring or templates.
     |
     */
 
@@ -38,29 +32,58 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Secret keys
+    | Secret key
     |--------------------------------------------------------------------------
     |
-    | Comma-separated HMAC secrets. The list form enables zero-downtime
-    | rotation: any matching key in the list accepts the attestation.
+    | Sent as a Bearer token when your backend verifies a response. Keep it
+    | server-side. Rotate it from the dashboard: while a rotation is pending the
+    | server accepts both keys, so your deploy needs no precise cutover.
     |
     */
 
-    'secret_keys' => array_values(array_filter(array_map(
-        'trim',
-        explode(',', (string) env('CAPTCHAAPI_SECRET_KEYS', '')),
-    ))),
+    'secret' => env('CAPTCHAAPI_SECRET'),
 
     /*
     |--------------------------------------------------------------------------
     | Base URL
     |--------------------------------------------------------------------------
     |
-    | Override the API origin. Use only when self-hosting / proxying.
+    | API origin for both the widget script and the verify call. Override
+    | only when self-hosting or proxying. Defaults to https://captchaapi.eu.
     |
     */
 
     'base_url' => env('CAPTCHAAPI_BASE_URL'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Verify timeout
+    |--------------------------------------------------------------------------
+    |
+    | Seconds to wait for the verify call before treating the server as
+    | unreachable and applying the fail policy below.
+    |
+    */
+
+    'timeout' => (int) env('CAPTCHAAPI_VERIFY_TIMEOUT', 5),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Fail policy
+    |--------------------------------------------------------------------------
+    |
+    | What happens when the verify call cannot reach a verdict — the server
+    | is unreachable or returns a 5xx. With fail_open true (the default), the
+    | submission is allowed through: a captcha guards a public form, and your
+    | own outage blocking every submission is worse than the rare bot slipping
+    | past during it. Set false for sensitive actions (login, payment) where a
+    | missed bot costs more than a blocked visitor; the visitor is then asked
+    | to try again, never told they failed the captcha. An attacker cannot
+    | reach this path — verification is server-to-server, off the browser.
+    |
+    */
+
+    'fail_open' => (bool) env('CAPTCHAAPI_FAIL_OPEN', true),
 
     /*
     |--------------------------------------------------------------------------
@@ -103,49 +126,13 @@ return [
     | Submit mode
     |--------------------------------------------------------------------------
     |
-    | 'submit' (widget default) calls native form.submit() after attesting;
-    | 'event' dispatches a captchaapi:attested CustomEvent instead — needed
-    | for Livewire / Inertia / htmx / fetch flows. Per-form
-    | data-captcha-mode attributes always win.
+    | 'submit' (widget default) calls native form.submit() after solving;
+    | 'event' dispatches a captchaapi:solved CustomEvent instead — needed for
+    | Livewire / Inertia / htmx / fetch flows. Per-form data-captcha-mode
+    | attributes always win.
     |
     */
 
     'mode' => env('CAPTCHAAPI_MODE'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Replay protection
-    |--------------------------------------------------------------------------
-    |
-    | Cache each accepted attestation's jti for the remainder of its TTL
-    | and reject duplicates. Uses the application's default cache; disable
-    | only if your cache is unreliable.
-    |
-    */
-
-    'replay_protection' => (bool) env('CAPTCHAAPI_REPLAY_PROTECTION', true),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Cache key prefix
-    |--------------------------------------------------------------------------
-    |
-    | Prefix for replay-protection cache keys. Change only on collision.
-    |
-    */
-
-    'cache_prefix' => 'captchaapi:jti:',
-
-    /*
-    |--------------------------------------------------------------------------
-    | Clock-skew leeway
-    |--------------------------------------------------------------------------
-    |
-    | Seconds the attestation's `iat` (issued-at) may sit in the future
-    | before being rejected. Tolerates small clock drift.
-    |
-    */
-
-    'clock_skew_leeway' => (int) env('CAPTCHAAPI_CLOCK_SKEW_LEEWAY', 60),
 
 ];

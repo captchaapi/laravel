@@ -5,19 +5,18 @@ declare(strict_types=1);
 use Captchaapi\Laravel\Concerns\WithCaptcha;
 use Captchaapi\Laravel\Facades\Captchaapi;
 use Captchaapi\Laravel\Rules\ValidCaptcha;
-use Captchaapi\Laravel\Tests\Helpers\Attestation;
 
 beforeEach(function (): void {
     Captchaapi::unfake();
 });
 
-it('the trait exposes a string captcha_attestation public property defaulting to empty', function (): void {
+it('the trait exposes a string captchaapi_response public property defaulting to empty', function (): void {
     $component = new class
     {
         use WithCaptcha;
     };
 
-    expect($component->captcha_attestation)->toBe('');
+    expect($component->captchaapi_response)->toBe('');
 });
 
 it('the trait declares the rule via a protected method that returns ValidCaptcha', function (): void {
@@ -33,22 +32,22 @@ it('the trait declares the rule via a protected method that returns ValidCaptcha
 
     $rules = $component->rules();
 
-    expect($rules)->toHaveKey('captcha_attestation');
-    expect($rules['captcha_attestation'])->toContain('required', 'string');
+    expect($rules)->toHaveKey('captchaapi_response');
+    expect($rules['captchaapi_response'])->toContain('required', 'string');
 
-    $captchaRule = collect($rules['captcha_attestation'])->first(fn ($r): bool => $r instanceof ValidCaptcha);
+    $captchaRule = collect($rules['captchaapi_response'])->first(fn ($r): bool => $r instanceof ValidCaptcha);
     expect($captchaRule)->toBeInstanceOf(ValidCaptcha::class);
 });
 
-it('the trait property survives assignment of a real attestation string', function (): void {
+it('the trait property survives assignment of a real response string', function (): void {
     $component = new class
     {
         use WithCaptcha;
     };
 
-    $component->captcha_attestation = Attestation::mint();
+    $component->captchaapi_response = 'token.solution';
 
-    expect($component->captcha_attestation)
+    expect($component->captchaapi_response)
         ->toBeString()
         ->toContain('.');
 });
@@ -83,21 +82,21 @@ it('validateWithCaptcha() merges the captcha rule into caller-supplied rules', f
 
     $component->callValidateWithCaptcha();
 
-    expect($component->capturedRules)->toHaveKeys(['email', 'captcha_attestation']);
+    expect($component->capturedRules)->toHaveKeys(['email', 'captchaapi_response']);
     expect($component->capturedRules['email'])->toBe('required|email');
 
-    $captchaRule = collect($component->capturedRules['captcha_attestation'])
+    $captchaRule = collect($component->capturedRules['captchaapi_response'])
         ->first(fn ($r): bool => $r instanceof ValidCaptcha);
     expect($captchaRule)->toBeInstanceOf(ValidCaptcha::class);
 });
 
-it('the trait does not declare a #[Validate] attribute on captcha_attestation', function (): void {
+it('the trait does not declare a #[Validate] attribute on captchaapi_response', function (): void {
     $reflection = new ReflectionProperty(
         new class
         {
             use WithCaptcha;
         },
-        'captcha_attestation',
+        'captchaapi_response',
     );
 
     expect($reflection->getAttributes())->toBeEmpty();
@@ -156,5 +155,5 @@ it('validateWithCaptcha() does not inject captcha rules when captchaapi.enabled 
 
     expect($component->capturedRules)
         ->toBe(['email' => 'required|email'])
-        ->not->toHaveKey('captcha_attestation');
+        ->not->toHaveKey('captchaapi_response');
 });

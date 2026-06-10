@@ -9,6 +9,9 @@ use RuntimeException;
 /** Singleton behind the Captchaapi facade: typed config accessors plus the fake() toggle. */
 final class Captchaapi
 {
+    /** Form field the widget injects and the rule validates. One name across widget, Blade, trait, rule. */
+    public const RESPONSE_FIELD = 'captchaapi_response';
+
     private bool $fake = false;
 
     /**
@@ -61,6 +64,30 @@ final class Captchaapi
         $trimmed = rtrim($value, '/');
 
         return $trimmed === '' ? null : $trimmed;
+    }
+
+    public function secret(): ?string
+    {
+        $value = config('captchaapi.secret');
+
+        return is_string($value) && $value !== '' ? $value : null;
+    }
+
+    public function verifyUrl(): string
+    {
+        return ($this->baseUrl() ?? 'https://captchaapi.eu').'/api/v1/captcha/verify';
+    }
+
+    public function verifyTimeout(): int
+    {
+        $value = (int) config('captchaapi.timeout', 5);
+
+        return $value > 0 ? $value : 5;
+    }
+
+    public function failOpen(): bool
+    {
+        return config()->boolean('captchaapi.fail_open', true);
     }
 
     public function locale(): ?string

@@ -25,8 +25,8 @@ abstract class TestCase extends Orchestra
     {
         $app['config']->set('captchaapi.enabled', true);
         $app['config']->set('captchaapi.site_key', 'test_site_key');
-        $app['config']->set('captchaapi.secret_keys', ['test_secret_key']);
-        $app['config']->set('captchaapi.replay_protection', true);
-        $app['config']->set('cache.default', 'array');
+        $app['config']->set('captchaapi.secret', 'test_secret_key');
+        $app['config']->set('captchaapi.base_url', null);
+        $app['config']->set('captchaapi.fail_open', true);
     }
 }

@@ -19,7 +19,7 @@
 @endphp
 @if(\Captchaapi\Laravel\Facades\Captchaapi::enabled())
     @php
-        $listener = '$wire.captcha_attestation = $event.detail.attestation; $wire.'.$action.'()';
+        $listener = '$wire.captchaapi_response = $event.detail.response; $wire.'.$action.'()';
     @endphp
     <form
         {{ $attributes->merge([
@@ -27,9 +27,9 @@
             'data-captcha-mode' => 'event',
         ]) }}
         x-data
-        x-on:captchaapi:attested="{{ $listener }}"
+        x-on:captchaapi:solved="{{ $listener }}"
     >
-        <input type="hidden" name="captcha_attestation">
+        <input type="hidden" name="captchaapi_response">
         {{ $slot }}
     </form>
 @else

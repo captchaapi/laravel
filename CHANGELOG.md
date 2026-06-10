@@ -7,6 +7,92 @@ and the format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [3.0.0] - 2026-06-10
+
+A breaking release: verification moved from a local HMAC check to a
+server-side call, matching how every hosted CAPTCHA works and keeping the
+secret off the browser.
+
+### Changed
+
+- **`ValidCaptcha` now verifies server-side.** It posts the widget's
+  response to captchaapi.eu `/verify` with your secret as a Bearer token and
+  accepts the submission only when the server returns success, instead of
+  validating a signed attestation in PHP. One outbound call per submit, with a
+  single attempt — the response is single-use, so a retry would spend a token
+  the visitor already solved.
+
+- **The form field is now `captchaapi_response`** (was `captcha_attestation`),
+  matching the value the widget injects. The Blade components and the
+  `WithCaptcha` trait are updated; update your own validation keys and any
+  hand-written hidden input or `@error('captcha_attestation')` directive.
+
+### Added
+
+- **`fail_open` config** (`CAPTCHAAPI_FAIL_OPEN`, default `true`) — decides what
+  happens when the verify call can't reach a verdict (server unreachable or a
+  5xx). The default lets the submission through; set it `false` for sensitive
+  actions, where the visitor is asked to try again rather than told they failed.
+- **`timeout` config** (`CAPTCHAAPI_VERIFY_TIMEOUT`, default `5`) — seconds to
+  wait for the verify call before applying the fail policy.
+
+### Removed
+
+- Local HMAC verification, and with it `replay_protection`, `cache_prefix`, and
+  `clock_skew_leeway`. The server owns single-use now: a response verifies
+  exactly once.
+- The `CAPTCHAAPI_SECRET_KEYS` list, replaced by a single `CAPTCHAAPI_SECRET`.
+  Rotation is handled in the dashboard, which keeps the previous secret valid
+  during the overlap.
+- The `illuminate/cache` dependency, which only backed replay tracking; added
+  `illuminate/http` for the verify call.
+
+### Migration
+
+1. Replace `CAPTCHAAPI_SECRET_KEYS` with a single `CAPTCHAAPI_SECRET`.
+2. Rename the field from `captcha_attestation` to `captchaapi_response` in your
+   validation rules, any direct `$this->captcha_attestation` references, and any
+   hand-written markup. The shipped Blade components already use the new name.
+3. Delete `CAPTCHAAPI_REPLAY_PROTECTION` and `CAPTCHAAPI_CLOCK_SKEW_LEEWAY` from
+   `.env` — they no longer do anything.
+4. Optionally set `CAPTCHAAPI_FAIL_OPEN=false` on login or payment forms.
+
+## [2.1.5] - 2026-05-28
+
+Re-tagged 2.1.4 to correct the release. No code changes.
+
+## [2.1.4] - 2026-05-28
+
+### Fixed
+
+- Corrected the server location in the README to Hetzner Nuremberg.
+
+### Documentation
+
+- Added PHP version and Laravel compatibility badges to the README.
+
+## [2.1.2] - 2026-05-13
+
+### Fixed
+
+- **`captchaapi.enabled` is now honored in the Livewire path.** The
+  `WithCaptcha` trait and `<x-captchaapi::livewire-form>` component skipped
+  the kill-switch, so a disabled install still wired up the captcha rule and
+  the event-mode form. Both now respect the flag.
+
+### Changed
+
+- Pinned Composer v2 in the CI `setup-php` step to accept the new GitHub App
+  token format.
+
+(2.1.3 was never released.)
+
+## [2.1.1] - 2026-05-11
+
+### Fixed
+
+- Removed a duplicated default value in `config/captchaapi.php`.
+
 ## [2.1.0] - 2026-05-11
 
 ### Added
