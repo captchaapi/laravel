@@ -45,7 +45,7 @@ Set the credentials in `.env`:
 
 ```dotenv
 CAPTCHAAPI_SITE_KEY=pk_live_...
-CAPTCHAAPI_SECRET=sk_live_...
+CAPTCHAAPI_SECRET_KEY=sk_live_...
 ```
 
 The site key is public and goes in the browser; the secret stays on your
@@ -246,7 +246,7 @@ a permanent kill-switch, not a per-test bypass — for that, use
 | ------------ | --------------------------- | ------- | ------------------------------------------------------------------------------------------------------ |
 | `enabled`    | `CAPTCHAAPI_ENABLED`        | `true`  | Master kill-switch. When false, the rule passes silently and the widget renders nothing.               |
 | `site_key`   | `CAPTCHAAPI_SITE_KEY`       | `null`  | Public site key from the dashboard. Required for widget rendering.                                      |
-| `secret`     | `CAPTCHAAPI_SECRET`         | `null`  | Project secret, sent as a Bearer token on the verify call. Server-side only.                            |
+| `secret_key` | `CAPTCHAAPI_SECRET_KEY`         | `null`  | Project secret, sent as a Bearer token on the verify call. Server-side only.                            |
 | `base_url`   | `CAPTCHAAPI_BASE_URL`       | `null`  | Override the API origin for the widget and the verify call. Defaults to `https://captchaapi.eu`.        |
 | `timeout`    | `CAPTCHAAPI_VERIFY_TIMEOUT` | `5`     | Seconds to wait for the verify call before treating the server as unreachable.                          |
 | `fail_open`  | `CAPTCHAAPI_FAIL_OPEN`      | `true`  | When the server is unreachable or returns a 5xx: `true` lets the submission through, `false` rejects it with a try-again message. |
@@ -283,7 +283,7 @@ every challenge issued, so you deploy the new key without a hard cutover:
 
 1. In the dashboard, click **Rotate secret key** — issues a new key while the
    current one keeps working.
-2. Update `CAPTCHAAPI_SECRET` in your `.env` and deploy. From here both keys
+2. Update `CAPTCHAAPI_SECRET_KEY` in your `.env` and deploy. From here both keys
    verify, so the timing of your deploy doesn't matter.
 3. In the dashboard, activate the new key, then retire the old one.
 

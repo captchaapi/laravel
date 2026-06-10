@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Facade;
 
 /**
  * @method static string|null siteKey()
- * @method static string|null secret()
+ * @method static string|null secretKey()
  * @method static string|null baseUrl()
  * @method static string verifyUrl()
  * @method static int verifyTimeout()

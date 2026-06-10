@@ -41,7 +41,7 @@ return [
     |
     */
 
-    'secret' => env('CAPTCHAAPI_SECRET'),
+    'secret_key' => env('CAPTCHAAPI_SECRET_KEY'),
 
     /*
     |--------------------------------------------------------------------------

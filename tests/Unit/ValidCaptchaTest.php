@@ -110,7 +110,7 @@ it('rejects an empty string without calling the server', function (): void {
 });
 
 it('rejects without calling the server when no secret is configured', function (): void {
-    config(['captchaapi.secret' => null]);
+    config(['captchaapi.secret_key' => null]);
     Http::fake();
 
     expect(runRule('token.solution'))->not->toBeNull();

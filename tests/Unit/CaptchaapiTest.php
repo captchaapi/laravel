@@ -49,15 +49,15 @@ it('enabled() reflects config(captchaapi.enabled)', function (): void {
     expect(Captchaapi::enabled())->toBeFalse();
 });
 
-it('secret() returns the configured secret or null when blank', function (): void {
-    config(['captchaapi.secret' => 'sk_live_abc']);
-    expect(Captchaapi::secret())->toBe('sk_live_abc');
+it('secretKey() returns the configured secret or null when blank', function (): void {
+    config(['captchaapi.secret_key' => 'sk_live_abc']);
+    expect(Captchaapi::secretKey())->toBe('sk_live_abc');
 
-    config(['captchaapi.secret' => '']);
-    expect(Captchaapi::secret())->toBeNull();
+    config(['captchaapi.secret_key' => '']);
+    expect(Captchaapi::secretKey())->toBeNull();
 
-    config(['captchaapi.secret' => null]);
-    expect(Captchaapi::secret())->toBeNull();
+    config(['captchaapi.secret_key' => null]);
+    expect(Captchaapi::secretKey())->toBeNull();
 });
 
 it('verifyUrl() appends the verify path to the default origin', function (): void {

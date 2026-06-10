@@ -66,9 +66,9 @@ final class Captchaapi
         return $trimmed === '' ? null : $trimmed;
     }
 
-    public function secret(): ?string
+    public function secretKey(): ?string
     {
-        $value = config('captchaapi.secret');
+        $value = config('captchaapi.secret_key');
 
         return is_string($value) && $value !== '' ? $value : null;
     }

@@ -7,6 +7,16 @@ and the format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [3.0.2] - 2026-06-10
+
+### Changed
+
+- **Renamed the secret env var to `CAPTCHAAPI_SECRET_KEY`** (was
+  `CAPTCHAAPI_SECRET`), the config key to `secret_key` (was `secret`), and the
+  accessor to `Captchaapi::secretKey()` (was `secret()`), to match the existing
+  `CAPTCHAAPI_SITE_KEY` / `site_key` / `siteKey()`. Update `.env`:
+  `CAPTCHAAPI_SECRET=...` becomes `CAPTCHAAPI_SECRET_KEY=...`.
+
 ## [3.0.1] - 2026-06-10
 
 ### Fixed

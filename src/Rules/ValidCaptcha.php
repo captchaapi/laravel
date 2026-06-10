@@ -44,7 +44,7 @@ final class ValidCaptcha implements ValidationRule
             return;
         }
 
-        $secret = Captchaapi::secret();
+        $secret = Captchaapi::secretKey();
 
         if ($secret === null) {
             $fail($this->rejectionMessage());
