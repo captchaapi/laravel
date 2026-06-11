@@ -18,4 +18,10 @@ final class FakeCaptchaapi
     {
         app(CaptchaapiManager::class)->unfake();
     }
+
+    /** Make the fake honour the server's single-use contract (replays rejected). */
+    public static function enforceSingleUse(): void
+    {
+        app(CaptchaapiManager::class)->enforceSingleUse();
+    }
 }

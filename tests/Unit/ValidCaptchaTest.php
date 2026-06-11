@@ -184,6 +184,20 @@ it('memoizes a success so a repeated validation in the same request skips the ve
     Http::assertSentCount(1);
 });
 
+it('does not leak the memo across requests when the singleton survives (Octane)', function (): void {
+    fakeVerify(['success' => true]);
+
+    expect(runRule('token.solution'))->toBeNull();
+
+    // Octane keeps the manager singleton but hands the worker a fresh request;
+    // the memo lives on the request, so the next request must verify again.
+    app()->instance('request', Illuminate\Http\Request::create('/login', 'POST'));
+
+    expect(runRule('token.solution'))->toBeNull();
+
+    Http::assertSentCount(2);
+});
+
 // ─── Bypass ─────────────────────────────────────────────────────────────────────
 
 it('bypasses verification and sends nothing when Captchaapi::fake() is enabled', function (): void {
@@ -200,6 +214,47 @@ it('passes silently and sends nothing when captchaapi.enabled is false', functio
 
     expect(runRule('obvious garbage'))->toBeNull();
     Http::assertNothingSent();
+});
+
+// ─── Enforced single-use (fake) ─────────────────────────────────────────────────
+
+it('still accepts any value under fake when single-use is not enforced', function (): void {
+    Captchaapi::fake();
+
+    expect(runRule('literal garbage value'))->toBeNull();
+});
+
+it('accepts a value once under enforced single-use', function (): void {
+    Captchaapi::fake();
+    Captchaapi::enforceSingleUse();
+
+    expect(runRule('token.solution'))->toBeNull();
+});
+
+it('lets a repeated validation in the same request through under enforced single-use', function (): void {
+    Captchaapi::fake();
+    Captchaapi::enforceSingleUse();
+
+    expect(runRule('token.solution'))->toBeNull();
+    expect(runRule('token.solution'))->toBeNull();
+});
+
+it('rejects a replay in a later request under enforced single-use', function (): void {
+    Captchaapi::fake();
+    Captchaapi::enforceSingleUse();
+
+    expect(runRule('token.solution'))->toBeNull();
+
+    app()->forgetInstance('request');
+
+    expect(runRule('token.solution'))->toBe(failureMessage());
+});
+
+it('rejects an empty value under enforced single-use', function (): void {
+    Captchaapi::fake();
+    Captchaapi::enforceSingleUse();
+
+    expect(runRule(''))->toBe(failureMessage());
 });
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────

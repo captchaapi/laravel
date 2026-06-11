@@ -14,6 +14,11 @@ final class Captchaapi
 
     private bool $fake = false;
 
+    private bool $enforceSingleUse = false;
+
+    /** @var array<string, true> */
+    private array $consumedResponses = [];
+
     /**
      * Restricted to the testing env: in Octane/Swoole/RoadRunner the singleton
      * survives across requests, so a stray call elsewhere would disable
@@ -30,16 +35,53 @@ final class Captchaapi
         }
 
         $this->fake = true;
+        $this->enforceSingleUse = false;
+        $this->consumedResponses = [];
     }
 
     public function unfake(): void
     {
         $this->fake = false;
+        $this->enforceSingleUse = false;
+        $this->consumedResponses = [];
     }
 
     public function isFake(): bool
     {
         return $this->fake;
+    }
+
+    /**
+     * Opt the fake into the server's single-use contract: a value verifies
+     * once, the per-request memo still covers Fortify's double validation, and
+     * a replay in a later request is rejected.
+     *
+     * @throws RuntimeException when called outside the testing environment.
+     */
+    public function enforceSingleUse(): void
+    {
+        if (! app()->environment('testing')) {
+            throw new RuntimeException(
+                'Captchaapi::enforceSingleUse() may only be called in the testing environment.'
+            );
+        }
+
+        $this->enforceSingleUse = true;
+    }
+
+    public function enforcesSingleUse(): bool
+    {
+        return $this->enforceSingleUse;
+    }
+
+    public function consume(string $value): void
+    {
+        $this->consumedResponses[$value] = true;
+    }
+
+    public function isConsumed(string $value): bool
+    {
+        return isset($this->consumedResponses[$value]);
     }
 
     public function enabled(): bool

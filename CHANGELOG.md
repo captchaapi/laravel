@@ -7,6 +7,17 @@ and the format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [3.1.0] - 2026-06-11
+
+### Added
+
+- **`FakeCaptchaapi::enforceSingleUse()`** — opts the fake into the server's
+  single-use contract. A response value verifies once; the per-request memo
+  still lets Fortify's double validation through, but a replay in a later
+  request is rejected. Lets integration tests prove a login survives Fortify's
+  two captcha validations instead of silently bypassing them. The default fake
+  is unchanged and still accepts any value.
+
 ## [3.0.2] - 2026-06-10
 
 ### Changed

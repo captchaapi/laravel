@@ -315,6 +315,37 @@ afterEach(function () {
 The fake state is stored on the `Captchaapi` singleton — it does not
 persist across requests in production code.
 
+### Catching Fortify's double validation
+
+Fortify runs the login validator twice in one request, so a single-use
+response must survive both passes. To prove your integration handles this
+instead of silently bypassing it, opt the fake into the server's single-use
+contract:
+
+```php
+FakeCaptchaapi::enable();
+FakeCaptchaapi::enforceSingleUse();
+```
+
+The value now verifies once per request — the per-request memo covers the
+double call — while a replay in a later request is rejected. A missing
+memoization then fails the test instead of passing silently.
+
+## Laravel Octane
+
+The package is safe under Octane (Swoole, RoadRunner, FrankenPHP), where the
+application and its singletons stay resident across requests:
+
+- **Verification is stateless.** Each check makes its own call to `/verify`
+  and reads the secret from config; nothing is cached on the manager between
+  requests.
+- **The per-request memo lives on the request, not the singleton.** Octane
+  hands each request a fresh request instance, so the memo never carries over
+  to the next visitor — every request verifies independently.
+- **Fake state is test-only.** `fake()` and `enforceSingleUse()` throw outside
+  the `testing` environment, so the bypass and the consumed-token set can never
+  be left set on a production worker.
+
 ## Security
 
 If you discover a security vulnerability, please **do not** open a

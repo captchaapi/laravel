@@ -24,7 +24,13 @@ final class ValidCaptcha implements ValidationRule
 {
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        if (! Captchaapi::enabled() || Captchaapi::isFake()) {
+        if (! Captchaapi::enabled()) {
+            return;
+        }
+
+        if (Captchaapi::isFake()) {
+            $this->validateFaked($value, $fail);
+
             return;
         }
 
@@ -79,6 +85,40 @@ final class ValidCaptcha implements ValidationRule
         }
 
         $fail($this->rejectionMessage());
+    }
+
+    /**
+     * Default fake bypasses verification and accepts any value. Once
+     * enforceSingleUse() is on it mimics the server: a value passes once, the
+     * per-request memo still lets Fortify's second validation through, and a
+     * replay in a later request is rejected.
+     */
+    private function validateFaked(mixed $value, Closure $fail): void
+    {
+        if (! Captchaapi::enforcesSingleUse()) {
+            return;
+        }
+
+        if (! is_string($value) || $value === '') {
+            $fail($this->rejectionMessage());
+
+            return;
+        }
+
+        $memoKey = $this->memoKey($value);
+
+        if ($this->isMemoized($memoKey)) {
+            return;
+        }
+
+        if (Captchaapi::isConsumed($value)) {
+            $fail($this->rejectionMessage());
+
+            return;
+        }
+
+        Captchaapi::consume($value);
+        $this->memoize($memoKey);
     }
 
     private function memoKey(string $value): string

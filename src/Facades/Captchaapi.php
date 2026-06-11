@@ -18,6 +18,10 @@ use Illuminate\Support\Facades\Facade;
  * @method static string preload()
  * @method static bool debug()
  * @method static bool enabled()
+ * @method static void enforceSingleUse()
+ * @method static bool enforcesSingleUse()
+ * @method static void consume(string $value)
+ * @method static bool isConsumed(string $value)
  *
  * @see CaptchaapiManager
  */
